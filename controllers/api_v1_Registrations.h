@@ -1,0 +1,31 @@
+#pragma once
+
+#include <drogon/HttpController.h>
+
+import dto;
+import service;
+
+using namespace drogon;
+
+namespace api::v1 {
+
+class registrations : public drogon::HttpController<registrations> {
+ public:
+  METHOD_LIST_BEGIN
+  
+  METHOD_ADD(registrations::Create, "", drogon::Post);
+  METHOD_ADD(registrations::Update, "/{1}", drogon::Put);
+  METHOD_ADD(registrations::Delete, "/{1}", drogon::Delete);
+  METHOD_ADD(registrations::GetById, "/{1}", drogon::Get);
+  METHOD_ADD(registrations::GetAll, "", drogon::Get);
+  
+  METHOD_LIST_END
+
+  Task<> Create(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, dto::CreateRegistrationRequest&& request);
+  Task<> Update(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id, dto::UpdateRegistrationRequest&& request);
+  Task<> Delete(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id);
+  Task<> GetById(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id);
+  Task<> GetAll(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback);
+};
+
+}  // namespace api::v1

@@ -1,0 +1,30 @@
+//
+// Created by bac on 3/27/26.
+//
+
+module;
+#include <drogon/drogon.h>
+#include <drogon/HttpTypes.h>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <vector>
+
+export module service:registration_interests;
+
+import dto;
+
+export namespace service::registration_interests {
+
+[[nodiscard]] drogon::Task<dto::RegistrationInterestResponse> Create(
+    dto::CreateRegistrationInterestRequest request);
+
+[[nodiscard]] drogon::Task<std::vector<dto::RegistrationInterestResponse>>
+GetByRegistrationId(std::string_view registration_id);
+
+[[nodiscard]] drogon::Task<std::vector<dto::RegistrationInterestResponse>>
+GetAll();
+
+[[nodiscard]] drogon::Task<void> Delete(std::string_view id);
+
+}  // namespace service::registration_interests

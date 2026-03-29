@@ -1,0 +1,15 @@
+{
+  "name" : "vip",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "c27eeddba73f608f10605d80bc0144c1166f8fb7",
+  "dependencies" : [ {
+    "name" : "glaze",
+    "version>=" : "7.2.1"
+  }, {
+    "name" : "libsodium",
+    "version>=" : "1.0.21#1"
+  }, {
+    "name" : "ms-gsl",
+    "version>=" : "4.2.1"
+  } ]
+}

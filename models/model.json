@@ -1,0 +1,57 @@
+{
+    "rdbms": "postgresql",
+    "host": "127.0.0.1",
+    "port": 5432,
+    "dbname": "qlattt",
+    "schema": "public",
+    "user": "bac",
+    "password": "0",
+    "tables": [
+        "admins",
+        "admin_sessions",
+        "project_info",
+        "site_settings",
+        "floor_plans",
+        "products",
+        "product_images",
+        "media",
+        "registrations",
+        "registration_interests",
+        "activity_logs"
+    ],
+    "relationships": {
+        "enabled": true,
+        "items": [
+            {
+                "type": "has many",
+                "original_table_name": "admins",
+                "original_table_alias": "admin",
+                "original_key": "id",
+                "target_table_name": "admin_sessions",
+                "target_table_alias": "sessions",
+                "target_key": "admin_id",
+                "enable_reverse": true
+            },
+            {
+                "type": "has many",
+                "original_table_name": "products",
+                "original_table_alias": "product",
+                "original_key": "id",
+                "target_table_name": "product_images",
+                "target_table_alias": "images",
+                "target_key": "product_id",
+                "enable_reverse": true
+            },
+            {
+                "type": "has many",
+                "original_table_name": "registrations",
+                "original_table_alias": "registration",
+                "original_key": "id",
+                "target_table_name": "registration_interests",
+                "target_table_alias": "interests",
+                "target_key": "registration_id",
+                "enable_reverse": true
+            }
+        ]
+    }
+}
