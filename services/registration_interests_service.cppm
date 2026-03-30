@@ -7,7 +7,6 @@ module;
 #include <drogon/HttpTypes.h>
 #include <optional>
 #include <string>
-#include <string_view>
 #include <vector>
 
 export module service:registration_interests;
@@ -20,11 +19,10 @@ export namespace service::registration_interests {
     dto::CreateRegistrationInterestRequest request);
 
 [[nodiscard]] drogon::Task<std::vector<dto::RegistrationInterestResponse>>
-GetByRegistrationId(std::string_view registration_id);
+GetByRegistrationId(std::string registration_id);
 
-[[nodiscard]] drogon::Task<std::vector<dto::RegistrationInterestResponse>>
-GetAll();
+[[nodiscard]] drogon::Task<std::vector<dto::RegistrationInterestResponse>> GetAll();
 
-[[nodiscard]] drogon::Task<void> Delete(std::string_view id);
+[[nodiscard]] drogon::Task<void> Delete(std::string id);
 
 }  // namespace service::registration_interests

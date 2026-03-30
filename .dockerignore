@@ -1,0 +1,8 @@
+build/
+cmake-build-debug/
+cmake-build-release/
+.vcpkg-clion/
+.idea/
+.git/
+vcpkg_installed/
+*.user

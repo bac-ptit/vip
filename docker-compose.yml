@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: vip-postgres
+    environment:
+      POSTGRES_USER: bac
+      POSTGRES_PASSWORD: 0
+      POSTGRES_DB: qlattt
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./main.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bac -d qlattt"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vip-backend
+    ports:
+      - "5555:5555"
+    depends_on:
+      db:
+        condition: service_healthy
+    # Tự động restart nếu có lỗi do DB chưa khởi động xong
+    restart: unless-stopped

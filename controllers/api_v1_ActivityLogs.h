@@ -13,8 +13,8 @@ class activitylogs : public drogon::HttpController<activitylogs> {
  public:
   METHOD_LIST_BEGIN
   
-  METHOD_ADD(activitylogs::GetAll, "", drogon::Get);
-  METHOD_ADD(activitylogs::GetByAdminId, "/admin/{1}", drogon::Get);
+  METHOD_ADD(activitylogs::GetAll, "", drogon::Get, "filter::AuthFilter");
+  METHOD_ADD(activitylogs::GetByAdminId, "/admin/{1}", drogon::Get, "filter::AuthFilter");
   
   METHOD_LIST_END
 

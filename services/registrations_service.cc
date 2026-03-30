@@ -46,26 +46,26 @@ static dto::RegistrationResponse MapToResponse(
 drogon::Task<dto::RegistrationResponse> Create(
     dto::CreateRegistrationRequest request) {
   domain::Registrations r;
-  r.setFullName(request.full_name);
-  r.setPhone(request.phone);
+  r.setFullName(std::move(request.full_name));
+  r.setPhone(std::move(request.phone));
   if (request.email) {
-    r.setEmail(*request.email);
+    r.setEmail(std::move(*request.email));
   }
   if (request.address) {
-    r.setAddress(*request.address);
+    r.setAddress(std::move(*request.address));
   }
   if (request.note) {
-    r.setNote(*request.note);
+    r.setNote(std::move(*request.note));
   }
 
-  auto created_r{co_await repo::registrations::Create(r)};
+  auto created_r{co_await repo::registrations::Create(std::move(r))};
 
   std::vector<domain::RegistrationInterests> created_interests;
   for (const auto& type : request.interests) {
     domain::RegistrationInterests ri;
     ri.setRegistrationId(created_r.getValueOfId());
     ri.setProductType(type);
-    auto ri_created{co_await repo::registration_interests::Create(ri)};
+    auto ri_created{co_await repo::registration_interests::Create(std::move(ri))};
     created_interests.push_back(std::move(ri_created));
   }
 
@@ -73,7 +73,7 @@ drogon::Task<dto::RegistrationResponse> Create(
 }
 
 drogon::Task<std::optional<dto::RegistrationResponse>> GetById(
-    std::string_view id) {
+    std::string id) {
   auto r_opt{co_await repo::registrations::FindById(id)};
   if (!r_opt) {
     co_return std::nullopt;
@@ -83,9 +83,9 @@ drogon::Task<std::optional<dto::RegistrationResponse>> GetById(
   auto interests_raw{co_await repo::registration_interests::FindByRegistrationId(id)};
   std::vector<domain::RegistrationInterests> interests;
   interests.reserve(interests_raw.size());
-  for (auto&& ri : interests_raw) {
-    interests.push_back(std::move(ri));
-  }
+  std::ranges::transform(interests_raw, std::back_inserter(interests), [](auto&& ri) {
+    return std::move(ri);
+  });
   
   co_return MapToResponse(r, interests);
 }
@@ -101,16 +101,16 @@ drogon::Task<std::vector<dto::RegistrationResponse>> GetAll() {
         r.getValueOfId())};
     std::vector<domain::RegistrationInterests> interests;
     interests.reserve(interests_raw.size());
-    for (auto&& ri : interests_raw) {
-      interests.push_back(std::move(ri));
-    }
+    std::ranges::transform(interests_raw, std::back_inserter(interests), [](auto&& ri) {
+      return std::move(ri);
+    });
     responses.push_back(MapToResponse(r, interests));
   }
 
   co_return responses;
 }
 
-drogon::Task<void> Update(std::string_view id,
+drogon::Task<void> Update(std::string id,
                           dto::UpdateRegistrationRequest request) {
   auto r_opt{co_await repo::registrations::FindById(id)};
   if (!r_opt) {
@@ -122,15 +122,15 @@ drogon::Task<void> Update(std::string_view id,
     r.setIsContacted(*request.is_contacted);
   }
   if (request.note) {
-    r.setNote(*request.note);
+    r.setNote(std::move(*request.note));
   }
 
   co_await repo::registrations::Update(r);
 }
 
-drogon::Task<void> Delete(std::string_view id) {
+drogon::Task<void> Delete(std::string id) {
   co_await repo::registration_interests::DeleteByRegistrationId(id);
-  co_await repo::registrations::DeleteById(id);
+  co_await repo::registrations::DeleteById(std::move(id));
 }
 
 }  // namespace service::registrations

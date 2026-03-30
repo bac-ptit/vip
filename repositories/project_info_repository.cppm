@@ -9,6 +9,7 @@ module;
 #include <optional>
 #include <string>
 #include <vector>
+#include <ranges>
 
 export module repo:project_info;
 
@@ -19,7 +20,7 @@ export namespace repo::project_info {
 using ProjectInfo = domain::ProjectInfo;
 using ProjectInfoModel = drogon_model::qlattt::ProjectInfo;
 
-[[nodiscard]] drogon::Task<ProjectInfo> Create(const ProjectInfo& p) {
+[[nodiscard]] drogon::Task<ProjectInfo> Create(ProjectInfo p) {
   auto db{drogon::app().getFastDbClient()};
   drogon::orm::CoroMapper<ProjectInfoModel> mapper{db};
   auto res{co_await mapper.insert(p)};
@@ -27,11 +28,11 @@ using ProjectInfoModel = drogon_model::qlattt::ProjectInfo;
 }
 
 [[nodiscard]] drogon::Task<std::optional<ProjectInfo>> FindById(
-    std::string_view id) {
+    std::string id) {
   auto db{drogon::app().getFastDbClient()};
   drogon::orm::CoroMapper<ProjectInfoModel> mapper{db};
   try {
-    auto res{co_await mapper.findByPrimaryKey(std::string{id})};
+    auto res{co_await mapper.findByPrimaryKey(id)};
     co_return ProjectInfo{std::move(res)};
   } catch (...) {
     co_return std::nullopt;
@@ -42,26 +43,24 @@ using ProjectInfoModel = drogon_model::qlattt::ProjectInfo;
   auto db{drogon::app().getFastDbClient()};
   drogon::orm::CoroMapper<ProjectInfoModel> mapper{db};
   auto res{co_await mapper.findAll()};
-  std::vector<ProjectInfo> project_infos;
-  project_infos.reserve(res.size());
-  for (auto& item : res) {
-    project_infos.emplace_back(std::move(item));
-  }
-  co_return project_infos;
+  
+  co_return res | std::views::transform([](auto&& item) {
+    return ProjectInfo{std::move(item)};
+  }) | std::ranges::to<std::vector>();
 }
 
-[[nodiscard]] drogon::Task<size_t> Update(const ProjectInfo& p) {
+[[nodiscard]] drogon::Task<size_t> Update(ProjectInfo p) {
   auto db{drogon::app().getFastDbClient()};
   drogon::orm::CoroMapper<ProjectInfoModel> mapper{db};
   co_return co_await mapper.update(p);
 }
 
-[[nodiscard]] drogon::Task<bool> DeleteById(std::string_view id) {
+[[nodiscard]] drogon::Task<bool> DeleteById(std::string id) {
   auto db{drogon::app().getFastDbClient()};
   drogon::orm::CoroMapper<ProjectInfoModel> mapper{db};
   auto count{co_await mapper.deleteBy(drogon::orm::Criteria(
       ProjectInfoModel::Cols::_id, drogon::orm::CompareOperator::EQ,
-      std::string{id}))};
+      std::move(id)))};
   co_return count > 0;
 }
 

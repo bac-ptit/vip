@@ -15,10 +15,10 @@ import dto;
 
 export namespace service::admin_sessions {
 
-[[nodiscard]] drogon::Task<std::optional<dto::AdminSessionResponse>> GetById(const std::string& id);
-[[nodiscard]] drogon::Task<std::optional<dto::AdminSessionResponse>> GetByRefreshToken(const std::string& token);
-[[nodiscard]] drogon::Task<std::vector<dto::AdminSessionResponse>> GetByAdminId(const std::string& adminId);
-[[nodiscard]] drogon::Task<void> RevokeSession(const std::string& id);
-[[nodiscard]] drogon::Task<void> RevokeAllAdminSessions(const std::string& adminId);
+[[nodiscard]] drogon::Task<std::optional<dto::AdminSessionResponse>> GetById(std::string id);
+[[nodiscard]] drogon::Task<std::optional<dto::AdminSessionResponse>> GetByRefreshToken(std::string token);
+[[nodiscard]] drogon::Task<std::vector<dto::AdminSessionResponse>> GetByAdminId(std::string adminId);
+[[nodiscard]] drogon::Task<void> RevokeSession(std::string id);
+[[nodiscard]] drogon::Task<void> RevokeAllAdminSessions(std::string adminId);
 
 }  // namespace service::admin_sessions

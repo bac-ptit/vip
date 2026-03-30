@@ -18,7 +18,7 @@ export namespace service::admin {
 
 /**
  * @brief Register a new admin with validation
- * @param request Registration data (passed by value for move optimization)
+ * @param request Registration data
  * @return Created admin response
  * @throws std::runtime_error if validation fails or username exists
  */
@@ -32,39 +32,39 @@ export namespace service::admin {
  * @throws std::runtime_error if account is deactivated
  */
 [[nodiscard]] drogon::Task<std::optional<dto::AdminResponse>> Login(
-    dto::LoginRequest&& request);
+    dto::LoginRequest request);
 
 /**
  * @brief Update admin profile
  * @param id Admin ID
- * @param request Update data (passed by value for move optimization)
+ * @param request Update data
  * @throws std::runtime_error if admin not found or validation fails
  */
 [[nodiscard]] drogon::Task<void> UpdateProfile(
-    std::string_view id, dto::UpdateProfileRequest request);
+    std::string id, dto::UpdateProfileRequest request);
 
 /**
  * @brief Change admin password
  * @param id Admin ID
- * @param request Password change data (passed by value for move optimization)
+ * @param request Password change data
  * @throws std::runtime_error if admin not found or old password incorrect
  */
 [[nodiscard]] drogon::Task<void> ChangePassword(
-    std::string_view id, dto::ChangePasswordRequest request);
+    std::string id, dto::ChangePasswordRequest request);
 
 /**
  * @brief Deactivate admin account (soft delete)
  * @param id Admin ID
  * @throws std::runtime_error if admin not found
  */
-[[nodiscard]] drogon::Task<void> Deactivate(std::string_view id);
+[[nodiscard]] drogon::Task<void> Deactivate(std::string id);
 
 /**
  * @brief Activate admin account
  * @param id Admin ID
  * @throws std::runtime_error if admin not found
  */
-[[nodiscard]] drogon::Task<void> Activate(std::string_view id);
+[[nodiscard]] drogon::Task<void> Activate(std::string id);
 
 /**
  * @brief Get admin by ID
@@ -72,7 +72,7 @@ export namespace service::admin {
  * @return Admin response if found, nullopt otherwise
  */
 [[nodiscard]] drogon::Task<std::optional<dto::AdminResponse>> GetById(
-    std::string_view id);
+    std::string id);
 
 /**
  * @brief Get admin by username
@@ -80,7 +80,7 @@ export namespace service::admin {
  * @return Admin response if found, nullopt otherwise
  */
 [[nodiscard]] drogon::Task<std::optional<dto::AdminResponse>> GetByUsername(
-    std::string_view username);
+    std::string username);
 
 /**
  * @brief Get all admins
@@ -100,6 +100,6 @@ export namespace service::admin {
  * @return true if available, false if taken
  */
 [[nodiscard]] drogon::Task<bool> IsUsernameAvailable(
-    std::string_view username);
+    std::string username);
 
 }  // namespace service::admin

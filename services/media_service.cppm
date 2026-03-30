@@ -26,18 +26,18 @@ export namespace service::media {
  * @brief Update media.
  */
 [[nodiscard]] drogon::Task<void> Update(
-    std::string_view id, dto::UpdateMediaRequest request);
+    std::string id, dto::UpdateMediaRequest request);
 
 /**
  * @brief Delete media.
  */
-[[nodiscard]] drogon::Task<void> Delete(std::string_view id);
+[[nodiscard]] drogon::Task<void> Delete(std::string id);
 
 /**
  * @brief Get media by ID.
  */
 [[nodiscard]] drogon::Task<std::optional<dto::MediaResponse>> GetById(
-    std::string_view id);
+    std::string id);
 
 /**
  * @brief Get all media.

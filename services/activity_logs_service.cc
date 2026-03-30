@@ -34,40 +34,40 @@ drogon::Task<std::vector<dto::ActivityLogResponse>> service::activity_logs::GetA
   auto logs{co_await repo::activity_logs::FindAll()};
   std::vector<dto::ActivityLogResponse> responses;
   responses.reserve(logs.size());
-  for (auto&& l : logs) {
-    responses.push_back(ToActivityLogResponse(l));
-  }
+  
+  std::ranges::transform(logs, std::back_inserter(responses), ToActivityLogResponse);
+  
   co_return responses;
 }
 
-drogon::Task<std::vector<dto::ActivityLogResponse>> service::activity_logs::GetByAdminId(const std::string& adminId) {
-  auto logs{co_await repo::activity_logs::FindByAdminId(adminId)};
+drogon::Task<std::vector<dto::ActivityLogResponse>> service::activity_logs::GetByAdminId(std::string adminId) {
+  auto logs{co_await repo::activity_logs::FindByAdminId(std::move(adminId))};
   std::vector<dto::ActivityLogResponse> responses;
   responses.reserve(logs.size());
-  for (auto&& l : logs) {
-    responses.push_back(ToActivityLogResponse(l));
-  }
+  
+  std::ranges::transform(logs, std::back_inserter(responses), ToActivityLogResponse);
+  
   co_return responses;
 }
 
-drogon::Task<void> service::activity_logs::LogAction(const std::string& adminId, const std::string& action, const std::string& entity, const std::string& entityId, const std::string& detail, const std::string& ipAddress) {
+drogon::Task<void> service::activity_logs::LogAction(std::string adminId, std::string action, std::string entity, std::string entityId, std::string detail, std::string ipAddress) {
   domain::ActivityLogs activityLog;
   if (!adminId.empty()) {
-    activityLog.setAdminId(adminId);
+    activityLog.setAdminId(std::move(adminId));
   }
-  activityLog.setAction(action);
+  activityLog.setAction(std::move(action));
   if (!entity.empty()) {
-    activityLog.setEntity(entity);
+    activityLog.setEntity(std::move(entity));
   }
   if (!entityId.empty()) {
-    activityLog.setEntityId(entityId);
+    activityLog.setEntityId(std::move(entityId));
   }
   if (!detail.empty()) {
-    activityLog.setDetail(detail);
+    activityLog.setDetail(std::move(detail));
   }
   if (!ipAddress.empty()) {
-    activityLog.setIpAddress(ipAddress);
+    activityLog.setIpAddress(std::move(ipAddress));
   }
   
-  co_await repo::activity_logs::Create(activityLog);
+  co_await repo::activity_logs::Create(std::move(activityLog));
 }

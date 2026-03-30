@@ -26,18 +26,18 @@ export namespace service::floor_plans {
  * @brief Update floor plan.
  */
 [[nodiscard]] drogon::Task<void> Update(
-    std::string_view id, dto::UpdateFloorPlanRequest request);
+    std::string id, dto::UpdateFloorPlanRequest request);
 
 /**
  * @brief Delete floor plan.
  */
-[[nodiscard]] drogon::Task<void> Delete(std::string_view id);
+[[nodiscard]] drogon::Task<void> Delete(std::string id);
 
 /**
  * @brief Get floor plan by ID.
  */
 [[nodiscard]] drogon::Task<std::optional<dto::FloorPlanResponse>> GetById(
-    std::string_view id);
+    std::string id);
 
 /**
  * @brief Get all floor plans.

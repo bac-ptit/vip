@@ -20,13 +20,13 @@ export namespace service::registrations {
     dto::CreateRegistrationRequest request);
 
 [[nodiscard]] drogon::Task<std::optional<dto::RegistrationResponse>> GetById(
-    std::string_view id);
+    std::string id);
 
 [[nodiscard]] drogon::Task<std::vector<dto::RegistrationResponse>> GetAll();
 
 [[nodiscard]] drogon::Task<void> Update(
-    std::string_view id, dto::UpdateRegistrationRequest request);
+    std::string id, dto::UpdateRegistrationRequest request);
 
-[[nodiscard]] drogon::Task<void> Delete(std::string_view id);
+[[nodiscard]] drogon::Task<void> Delete(std::string id);
 
 }  // namespace service::registrations

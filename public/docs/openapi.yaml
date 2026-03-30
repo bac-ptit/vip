@@ -1,2275 +1,812 @@
 openapi: 3.0.3
 info:
   title: VIP Backend API
-  description: |
-    RESTful API for the VIP project - a high-performance real estate management system built with C++ and Drogon framework.
-    
-    ## Authentication
-    Most endpoints require authentication via the `X-Admin-Id` header containing a valid admin session ID.
-    
-    ## Public Endpoints
-    - Admin registration and login
-    - Product catalog (GET operations)
-    - Product images (GET operations)
-    - Floor plans (GET operations)
-    - Media gallery (GET operations)
-    - Project information (GET operations)
-    - Site settings (GET operations)
-    - Customer registrations (POST)
+  description: High-performance backend for VIP project using Drogon and Glaze. Logic auth được quản lý trực tiếp tại từng Controller.
   version: 1.0.0
-  contact:
-    name: VIP API Support
 servers:
-  - url: ''
-    description: Current server (auto-detected)
+  - url: /api/v1
+    description: Primary API version
 
-tags:
-  - name: Admin
-    description: Administrator management endpoints
-  - name: Admin Sessions
-    description: Admin session management and security
-  - name: Activity Logs
-    description: Admin activity audit trail
-  - name: Products
-    description: Product catalog management
-  - name: Product Images
-    description: Product image gallery management
-  - name: Floor Plans
-    description: Floor plan document management
-  - name: Media
-    description: Media gallery (photos and videos)
-  - name: Project Info
-    description: Project information and details
-  - name: Registrations
-    description: Customer registration management
-  - name: Registration Interests
-    description: Customer product interest tracking
-  - name: Site Settings
-    description: Global site configuration
-
-security:
-  - sessionAuth: []
-
-paths:
-  # ==================== ADMIN ENDPOINTS ====================
-  /api/v1/admin/register:
-    post:
-      tags:
-        - Admin
-      summary: Register a new administrator
-      description: Creates a new admin account with username, password, and full name
-      operationId: registerAdmin
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RegisterAdminRequest'
-      responses:
-        '200':
-          description: Admin registered successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminResponse'
-        '400':
-          description: Invalid request or username already exists
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/v1/admin/login:
-    post:
-      tags:
-        - Admin
-      summary: Admin login
-      description: Authenticates an admin and returns session information
-      operationId: loginAdmin
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoginRequest'
-      responses:
-        '200':
-          description: Login successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  admin:
-                    $ref: '#/components/schemas/AdminResponse'
-                  session_id:
-                    type: string
-                    format: uuid
-        '401':
-          description: Invalid credentials
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/v1/admin:
-    get:
-      tags:
-        - Admin
-      summary: List all administrators
-      description: Retrieves a list of all admin accounts
-      operationId: listAdmins
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AdminResponse'
-
-  /api/v1/admin/{id}:
-    get:
-      tags:
-        - Admin
-      summary: Get admin by ID
-      description: Retrieves a specific admin account by ID
-      operationId: getAdminById
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminResponse'
-        '404':
-          description: Admin not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/v1/admin/username/{username}:
-    get:
-      tags:
-        - Admin
-      summary: Get admin by username
-      description: Retrieves a specific admin account by username
-      operationId: getAdminByUsername
-      parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminResponse'
-        '404':
-          description: Admin not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/v1/admin/active:
-    get:
-      tags:
-        - Admin
-      summary: List active administrators
-      description: Retrieves all admin accounts with is_active=true
-      operationId: listActiveAdmins
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AdminResponse'
-
-  /api/v1/admin/check-username/{username}:
-    get:
-      tags:
-        - Admin
-      summary: Check username availability
-      description: Checks if a username is available for registration
-      operationId: checkUsername
-      parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Username availability status
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  available:
-                    type: boolean
-
-  /api/v1/admin/{id}/profile:
-    put:
-      tags:
-        - Admin
-      summary: Update admin profile
-      description: Updates username or full name for an admin
-      operationId: updateAdminProfile
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateProfileRequest'
-      responses:
-        '200':
-          description: Profile updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminResponse'
-        '404':
-          description: Admin not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/v1/admin/{id}/password:
-    put:
-      tags:
-        - Admin
-      summary: Change admin password
-      description: Changes the password for an admin account
-      operationId: changeAdminPassword
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ChangePasswordRequest'
-      responses:
-        '204':
-          description: Password changed successfully
-        '401':
-          description: Old password incorrect
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: Admin not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/v1/admin/{id}/deactivate:
-    post:
-      tags:
-        - Admin
-      summary: Deactivate admin account
-      description: Sets is_active=false for an admin account
-      operationId: deactivateAdmin
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Admin deactivated successfully
-        '404':
-          description: Admin not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/v1/admin/{id}/activate:
-    post:
-      tags:
-        - Admin
-      summary: Activate admin account
-      description: Sets is_active=true for an admin account
-      operationId: activateAdmin
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Admin activated successfully
-        '404':
-          description: Admin not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  # ==================== ADMIN SESSIONS ENDPOINTS ====================
-  /api/v1/admin-sessions/{id}:
-    get:
-      tags:
-        - Admin Sessions
-      summary: Get session by ID
-      description: Retrieves details of a specific admin session
-      operationId: getAdminSession
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminSessionResponse'
-        '404':
-          description: Session not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/v1/admin-sessions/{id}/revoke:
-    post:
-      tags:
-        - Admin Sessions
-      summary: Revoke a session
-      description: Revokes a specific admin session by ID
-      operationId: revokeAdminSession
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Session revoked successfully
-        '404':
-          description: Session not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/v1/admin-sessions/admin/{admin_id}:
-    get:
-      tags:
-        - Admin Sessions
-      summary: List sessions for an admin
-      description: Retrieves all sessions for a specific admin
-      operationId: listAdminSessions
-      parameters:
-        - name: admin_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AdminSessionResponse'
-
-  /api/v1/admin-sessions/admin/{admin_id}/revoke-all:
-    post:
-      tags:
-        - Admin Sessions
-      summary: Revoke all sessions for an admin
-      description: Revokes all active sessions for a specific admin
-      operationId: revokeAllAdminSessions
-      parameters:
-        - name: admin_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: All sessions revoked successfully
-
-  # ==================== ACTIVITY LOGS ENDPOINTS ====================
-  /api/v1/activity-logs:
-    get:
-      tags:
-        - Activity Logs
-      summary: List all activity logs
-      description: Retrieves all activity logs across all admins
-      operationId: listActivityLogs
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ActivityLogResponse'
-
-  /api/v1/activity-logs/admin/{admin_id}:
-    get:
-      tags:
-        - Activity Logs
-      summary: List activity logs for an admin
-      description: Retrieves all activity logs for a specific admin
-      operationId: listAdminActivityLogs
-      parameters:
-        - name: admin_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ActivityLogResponse'
-
-  # ==================== PRODUCTS ENDPOINTS ====================
-  /api/v1/products:
-    post:
-      tags:
-        - Products
-      summary: Create a new product
-      description: Creates a new product in the catalog
-      operationId: createProduct
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateProductRequest'
-      responses:
-        '200':
-          description: Product created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductResponse'
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    get:
-      tags:
-        - Products
-      summary: List all products
-      description: Retrieves all products in the catalog
-      operationId: listProducts
-      security: []
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductResponse'
-
-  /api/v1/products/{id}:
-    get:
-      tags:
-        - Products
-      summary: Get product by ID
-      description: Retrieves a specific product by ID
-      operationId: getProduct
-      security: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductResponse'
-        '404':
-          description: Product not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    put:
-      tags:
-        - Products
-      summary: Update a product
-      description: Updates an existing product
-      operationId: updateProduct
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateProductRequest'
-      responses:
-        '200':
-          description: Product updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductResponse'
-        '404':
-          description: Product not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    delete:
-      tags:
-        - Products
-      summary: Delete a product
-      description: Deletes a product from the catalog
-      operationId: deleteProduct
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Product deleted successfully
-        '404':
-          description: Product not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/v1/products/search:
-    get:
-      tags:
-        - Products
-      summary: Search products
-      description: Search products by name, type, and price range
-      operationId: searchProducts
-      security: []
-      parameters:
-        - name: name
-          in: query
-          description: Filter by product name (partial match)
-          schema:
-            type: string
-        - name: type
-          in: query
-          description: Filter by product type
-          schema:
-            type: string
-        - name: min_price
-          in: query
-          description: Minimum price filter
-          schema:
-            type: string
-        - name: max_price
-          in: query
-          description: Maximum price filter
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductResponse'
-
-  # ==================== PRODUCT IMAGES ENDPOINTS ====================
-  /api/v1/product-images:
-    post:
-      tags:
-        - Product Images
-      summary: Create a product image
-      description: Uploads a new product image
-      operationId: createProductImage
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateProductImageRequest'
-      responses:
-        '200':
-          description: Product image created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductImageResponse'
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/v1/product-images/{id}:
-    get:
-      tags:
-        - Product Images
-      summary: Get product image by ID
-      description: Retrieves a specific product image
-      operationId: getProductImage
-      security: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductImageResponse'
-        '404':
-          description: Product image not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    put:
-      tags:
-        - Product Images
-      summary: Update a product image
-      description: Updates product image metadata
-      operationId: updateProductImage
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateProductImageRequest'
-      responses:
-        '200':
-          description: Product image updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductImageResponse'
-        '404':
-          description: Product image not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    delete:
-      tags:
-        - Product Images
-      summary: Delete a product image
-      description: Deletes a product image
-      operationId: deleteProductImage
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Product image deleted successfully
-        '404':
-          description: Product image not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/v1/product-images/product/{product_id}:
-    get:
-      tags:
-        - Product Images
-      summary: List all images for a product
-      description: Retrieves all images (active and inactive) for a specific product
-      operationId: listProductImages
-      security: []
-      parameters:
-        - name: product_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductImageResponse'
-
-  /api/v1/product-images/product/{product_id}/active:
-    get:
-      tags:
-        - Product Images
-      summary: List active images for a product
-      description: Retrieves only active images for a specific product
-      operationId: listActiveProductImages
-      security: []
-      parameters:
-        - name: product_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductImageResponse'
-
-  # ==================== FLOOR PLANS ENDPOINTS ====================
-  /api/v1/floor-plans:
-    post:
-      tags:
-        - Floor Plans
-      summary: Create a floor plan
-      description: Uploads a new floor plan document
-      operationId: createFloorPlan
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateFloorPlanRequest'
-      responses:
-        '200':
-          description: Floor plan created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FloorPlanResponse'
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    get:
-      tags:
-        - Floor Plans
-      summary: List all floor plans
-      description: Retrieves all floor plans
-      operationId: listFloorPlans
-      security: []
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/FloorPlanResponse'
-
-  /api/v1/floor-plans/active:
-    get:
-      tags:
-        - Floor Plans
-      summary: List active floor plans
-      description: Retrieves only active floor plans
-      operationId: listActiveFloorPlans
-      security: []
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/FloorPlanResponse'
-
-  /api/v1/floor-plans/{id}:
-    get:
-      tags:
-        - Floor Plans
-      summary: Get floor plan by ID
-      description: Retrieves a specific floor plan
-      operationId: getFloorPlan
-      security: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FloorPlanResponse'
-        '404':
-          description: Floor plan not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    put:
-      tags:
-        - Floor Plans
-      summary: Update a floor plan
-      description: Updates floor plan metadata
-      operationId: updateFloorPlan
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateFloorPlanRequest'
-      responses:
-        '200':
-          description: Floor plan updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FloorPlanResponse'
-        '404':
-          description: Floor plan not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    delete:
-      tags:
-        - Floor Plans
-      summary: Delete a floor plan
-      description: Deletes a floor plan
-      operationId: deleteFloorPlan
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Floor plan deleted successfully
-        '404':
-          description: Floor plan not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  # ==================== MEDIA ENDPOINTS ====================
-  /api/v1/media:
-    post:
-      tags:
-        - Media
-      summary: Create a media item
-      description: Uploads a new media item (photo or video)
-      operationId: createMedia
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateMediaRequest'
-      responses:
-        '200':
-          description: Media created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MediaResponse'
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    get:
-      tags:
-        - Media
-      summary: List all media
-      description: Retrieves all media items
-      operationId: listMedia
-      security: []
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/MediaResponse'
-
-  /api/v1/media/active:
-    get:
-      tags:
-        - Media
-      summary: List active media
-      description: Retrieves only active media items
-      operationId: listActiveMedia
-      security: []
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/MediaResponse'
-
-  /api/v1/media/{id}:
-    get:
-      tags:
-        - Media
-      summary: Get media by ID
-      description: Retrieves a specific media item
-      operationId: getMedia
-      security: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MediaResponse'
-        '404':
-          description: Media not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    put:
-      tags:
-        - Media
-      summary: Update a media item
-      description: Updates media metadata
-      operationId: updateMedia
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateMediaRequest'
-      responses:
-        '200':
-          description: Media updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MediaResponse'
-        '404':
-          description: Media not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    delete:
-      tags:
-        - Media
-      summary: Delete a media item
-      description: Deletes a media item
-      operationId: deleteMedia
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Media deleted successfully
-        '404':
-          description: Media not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  # ==================== PROJECT INFO ENDPOINTS ====================
-  /api/v1/project-info:
-    post:
-      tags:
-        - Project Info
-      summary: Create project information
-      description: Creates a new project info record
-      operationId: createProjectInfo
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateProjectInfoRequest'
-      responses:
-        '200':
-          description: Project info created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProjectInfoResponse'
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    get:
-      tags:
-        - Project Info
-      summary: List all project information
-      description: Retrieves all project info records
-      operationId: listProjectInfo
-      security: []
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProjectInfoResponse'
-
-  /api/v1/project-info/{id}:
-    get:
-      tags:
-        - Project Info
-      summary: Get project info by ID
-      description: Retrieves a specific project info record
-      operationId: getProjectInfo
-      security: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProjectInfoResponse'
-        '404':
-          description: Project info not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    put:
-      tags:
-        - Project Info
-      summary: Update project information
-      description: Updates an existing project info record
-      operationId: updateProjectInfo
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateProjectInfoRequest'
-      responses:
-        '200':
-          description: Project info updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProjectInfoResponse'
-        '404':
-          description: Project info not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    delete:
-      tags:
-        - Project Info
-      summary: Delete project information
-      description: Deletes a project info record
-      operationId: deleteProjectInfo
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Project info deleted successfully
-        '404':
-          description: Project info not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  # ==================== REGISTRATIONS ENDPOINTS ====================
-  /api/v1/registrations:
-    post:
-      tags:
-        - Registrations
-      summary: Create a customer registration
-      description: Creates a new customer registration with product interests
-      operationId: createRegistration
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateRegistrationRequest'
-      responses:
-        '200':
-          description: Registration created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RegistrationResponse'
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    get:
-      tags:
-        - Registrations
-      summary: List all registrations
-      description: Retrieves all customer registrations
-      operationId: listRegistrations
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RegistrationResponse'
-
-  /api/v1/registrations/{id}:
-    get:
-      tags:
-        - Registrations
-      summary: Get registration by ID
-      description: Retrieves a specific registration
-      operationId: getRegistration
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RegistrationResponse'
-        '404':
-          description: Registration not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    put:
-      tags:
-        - Registrations
-      summary: Update a registration
-      description: Updates registration contact status and notes
-      operationId: updateRegistration
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateRegistrationRequest'
-      responses:
-        '200':
-          description: Registration updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RegistrationResponse'
-        '404':
-          description: Registration not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    delete:
-      tags:
-        - Registrations
-      summary: Delete a registration
-      description: Deletes a customer registration
-      operationId: deleteRegistration
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Registration deleted successfully
-        '404':
-          description: Registration not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  # ==================== REGISTRATION INTERESTS ENDPOINTS ====================
-  /api/v1/registration-interests:
-    post:
-      tags:
-        - Registration Interests
-      summary: Create a registration interest
-      description: Adds a product interest to a registration
-      operationId: createRegistrationInterest
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateRegistrationInterestRequest'
-      responses:
-        '200':
-          description: Registration interest created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RegistrationInterestResponse'
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/v1/registration-interests/{id}:
-    delete:
-      tags:
-        - Registration Interests
-      summary: Delete a registration interest
-      description: Removes a product interest from a registration
-      operationId: deleteRegistrationInterest
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Registration interest deleted successfully
-        '404':
-          description: Registration interest not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/v1/registration-interests/registration/{registration_id}:
-    get:
-      tags:
-        - Registration Interests
-      summary: List interests for a registration
-      description: Retrieves all product interests for a specific registration
-      operationId: listRegistrationInterests
-      parameters:
-        - name: registration_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RegistrationInterestResponse'
-
-  # ==================== SITE SETTINGS ENDPOINTS ====================
-  /api/v1/site-settings:
-    get:
-      tags:
-        - Site Settings
-      summary: Get site settings
-      description: Retrieves global site configuration
-      operationId: getSiteSettings
-      security: []
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SiteSettingsResponse'
-
-    put:
-      tags:
-        - Site Settings
-      summary: Update site settings
-      description: Updates global site configuration
-      operationId: updateSiteSettings
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateSiteSettingsRequest'
-      responses:
-        '200':
-          description: Site settings updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SiteSettingsResponse'
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-# ==================== COMPONENTS ====================
 components:
   securitySchemes:
-    sessionAuth:
+    AdminAuth:
       type: apiKey
       in: header
       name: X-Admin-Id
-      description: Admin session ID obtained from login
+      description: Custom header for admin authentication.
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
 
   schemas:
-    # ==================== ADMIN SCHEMAS ====================
-    RegisterAdminRequest:
-      type: object
-      required:
-        - username
-        - password
-        - full_name
-      properties:
-        username:
-          type: string
-          minLength: 3
-          maxLength: 50
-          example: admin_user
-        password:
-          type: string
-          minLength: 8
-          example: SecurePassword123
-        full_name:
-          type: string
-          minLength: 1
-          maxLength: 100
-          example: John Doe
-
-    LoginRequest:
-      type: object
-      required:
-        - username
-        - password
-      properties:
-        username:
-          type: string
-          example: admin_user
-        password:
-          type: string
-          example: SecurePassword123
-
-    UpdateProfileRequest:
-      type: object
-      properties:
-        username:
-          type: string
-          minLength: 3
-          maxLength: 50
-          example: new_username
-        full_name:
-          type: string
-          minLength: 1
-          maxLength: 100
-          example: Jane Doe
-
-    ChangePasswordRequest:
-      type: object
-      required:
-        - old_password
-        - new_password
-      properties:
-        old_password:
-          type: string
-          example: OldPassword123
-        new_password:
-          type: string
-          minLength: 8
-          example: NewSecurePassword123
-
-    AdminResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440000
-        username:
-          type: string
-          example: admin_user
-        full_name:
-          type: string
-          example: John Doe
-        is_active:
-          type: boolean
-          example: true
-        created_at:
-          type: string
-          format: date-time
-          example: "2026-03-27T10:30:00Z"
-        updated_at:
-          type: string
-          format: date-time
-          example: "2026-03-27T10:30:00Z"
-
-    # ==================== ADMIN SESSION SCHEMAS ====================
-    AdminSessionResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440001
-        admin_id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440000
-        refresh_token:
-          type: string
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-        ip_address:
-          type: string
-          example: 192.168.1.100
-        user_agent:
-          type: string
-          example: Mozilla/5.0 (Windows NT 10.0; Win64; x64)...
-        expires_at:
-          type: string
-          format: date-time
-          example: "2026-04-27T10:30:00Z"
-        revoked:
-          type: boolean
-          example: false
-        created_at:
-          type: string
-          format: date-time
-          example: "2026-03-27T10:30:00Z"
-
-    # ==================== ACTIVITY LOG SCHEMAS ====================
-    ActivityLogResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440002
-        admin_id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440000
-        action:
-          type: string
-          enum: [CREATE, UPDATE, DELETE, LOGIN, LOGOUT]
-          example: CREATE
-        entity:
-          type: string
-          example: Product
-        entity_id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440003
-        detail:
-          type: string
-          example: Created new product "Luxury Apartment"
-        ip_address:
-          type: string
-          example: 192.168.1.100
-        created_at:
-          type: string
-          format: date-time
-          example: "2026-03-27T10:30:00Z"
-
-    # ==================== PRODUCT SCHEMAS ====================
-    CreateProductRequest:
-      type: object
-      required:
-        - type
-        - name
-        - price
-      properties:
-        type:
-          type: string
-          example: Apartment
-        name:
-          type: string
-          example: Luxury 2BR Apartment
-        price:
-          type: string
-          example: "500000000"
-        area:
-          type: string
-          example: "85"
-        description:
-          type: string
-          example: Modern apartment with city view
-        is_active:
-          type: boolean
-          default: true
-          example: true
-
-    UpdateProductRequest:
-      type: object
-      properties:
-        type:
-          type: string
-          example: Penthouse
-        name:
-          type: string
-          example: Luxury 3BR Penthouse
-        price:
-          type: string
-          example: "750000000"
-        area:
-          type: string
-          example: "120"
-        description:
-          type: string
-          example: Premium penthouse with panoramic view
-        is_active:
-          type: boolean
-          example: true
-
-    ProductResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440003
-        type:
-          type: string
-          example: Apartment
-        name:
-          type: string
-          example: Luxury 2BR Apartment
-        price:
-          type: string
-          example: "500000000"
-        area:
-          type: string
-          example: "85"
-        description:
-          type: string
-          example: Modern apartment with city view
-        is_active:
-          type: boolean
-          example: true
-        created_at:
-          type: string
-          format: date-time
-          example: "2026-03-27T10:30:00Z"
-        updated_at:
-          type: string
-          format: date-time
-          example: "2026-03-27T10:30:00Z"
-
-    # ==================== PRODUCT IMAGE SCHEMAS ====================
-    CreateProductImageRequest:
-      type: object
-      required:
-        - product_id
-        - url
-      properties:
-        product_id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440003
-        url:
-          type: string
-          format: uri
-          example: https://cdn.example.com/images/product1.jpg
-        is_cover:
-          type: boolean
-          default: false
-          example: true
-        sort_order:
-          type: integer
-          format: int16
-          default: 0
-          example: 1
-
-    UpdateProductImageRequest:
-      type: object
-      properties:
-        product_id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440003
-        url:
-          type: string
-          format: uri
-          example: https://cdn.example.com/images/product1-updated.jpg
-        is_cover:
-          type: boolean
-          example: false
-        sort_order:
-          type: integer
-          format: int16
-          example: 2
-
-    ProductImageResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440004
-        product_id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440003
-        url:
-          type: string
-          format: uri
-          example: https://cdn.example.com/images/product1.jpg
-        is_cover:
-          type: boolean
-          example: true
-        sort_order:
-          type: integer
-          format: int16
-          example: 1
-        uploaded_by:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440000
-        created_at:
-          type: string
-          format: date-time
-          example: "2026-03-27T10:30:00Z"
-
-    # ==================== FLOOR PLAN SCHEMAS ====================
-    CreateFloorPlanRequest:
-      type: object
-      required:
-        - title
-        - url
-      properties:
-        title:
-          type: string
-          example: Floor 2-5 Standard Layout
-        url:
-          type: string
-          format: uri
-          example: https://cdn.example.com/floorplans/floor2-5.pdf
-        sort_order:
-          type: integer
-          format: int16
-          default: 0
-          example: 1
-        is_active:
-          type: boolean
-          default: true
-          example: true
-
-    UpdateFloorPlanRequest:
-      type: object
-      properties:
-        title:
-          type: string
-          example: Floor 2-5 Updated Layout
-        url:
-          type: string
-          format: uri
-          example: https://cdn.example.com/floorplans/floor2-5-v2.pdf
-        sort_order:
-          type: integer
-          format: int16
-          example: 2
-        is_active:
-          type: boolean
-          example: false
-
-    FloorPlanResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440005
-        title:
-          type: string
-          example: Floor 2-5 Standard Layout
-        url:
-          type: string
-          format: uri
-          example: https://cdn.example.com/floorplans/floor2-5.pdf
-        sort_order:
-          type: integer
-          format: int16
-          example: 1
-        is_active:
-          type: boolean
-          example: true
-        uploaded_by:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440000
-        created_at:
-          type: string
-          format: date-time
-          example: "2026-03-27T10:30:00Z"
-
-    # ==================== MEDIA SCHEMAS ====================
-    CreateMediaRequest:
-      type: object
-      required:
-        - type
-        - url
-      properties:
-        type:
-          type: string
-          enum: [photo, video]
-          example: photo
-        title:
-          type: string
-          example: Main Lobby View
-        url:
-          type: string
-          format: uri
-          example: https://cdn.example.com/media/lobby.jpg
-        thumbnail:
-          type: string
-          format: uri
-          example: https://cdn.example.com/media/lobby-thumb.jpg
-        sort_order:
-          type: integer
-          format: int16
-          default: 0
-          example: 1
-        is_active:
-          type: boolean
-          default: true
-          example: true
-
-    UpdateMediaRequest:
-      type: object
-      properties:
-        type:
-          type: string
-          enum: [photo, video]
-          example: video
-        title:
-          type: string
-          example: Virtual Tour
-        url:
-          type: string
-          format: uri
-          example: https://cdn.example.com/media/tour.mp4
-        thumbnail:
-          type: string
-          format: uri
-          example: https://cdn.example.com/media/tour-thumb.jpg
-        sort_order:
-          type: integer
-          format: int16
-          example: 2
-        is_active:
-          type: boolean
-          example: false
-
-    MediaResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440006
-        type:
-          type: string
-          enum: [photo, video]
-          example: photo
-        title:
-          type: string
-          example: Main Lobby View
-        url:
-          type: string
-          format: uri
-          example: https://cdn.example.com/media/lobby.jpg
-        thumbnail:
-          type: string
-          format: uri
-          example: https://cdn.example.com/media/lobby-thumb.jpg
-        sort_order:
-          type: integer
-          format: int16
-          example: 1
-        is_active:
-          type: boolean
-          example: true
-        uploaded_by:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440000
-        created_at:
-          type: string
-          format: date-time
-          example: "2026-03-27T10:30:00Z"
-
-    # ==================== PROJECT INFO SCHEMAS ====================
-    CreateProjectInfoRequest:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-          example: VIP Luxury Residences
-        developer:
-          type: string
-          example: ABC Development Corporation
-        scale:
-          type: string
-          example: 25 floors, 200 units
-        description:
-          type: string
-          example: Premier residential complex in the heart of the city
-        map_lat:
-          type: number
-          format: double
-          example: 10.762622
-        map_lng:
-          type: number
-          format: double
-          example: 106.660172
-        map_zoom:
-          type: integer
-          format: int16
-          default: 15
-          example: 16
-
-    UpdateProjectInfoRequest:
-      type: object
-      properties:
-        name:
-          type: string
-          example: VIP Luxury Residences Updated
-        developer:
-          type: string
-          example: ABC Development Corporation Ltd
-        scale:
-          type: string
-          example: 30 floors, 250 units
-        description:
-          type: string
-          example: Updated premier residential complex
-        map_lat:
-          type: number
-          format: double
-          example: 10.762700
-        map_lng:
-          type: number
-          format: double
-          example: 106.660200
-        map_zoom:
-          type: integer
-          format: int16
-          example: 17
-
-    ProjectInfoResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440007
-        name:
-          type: string
-          example: VIP Luxury Residences
-        developer:
-          type: string
-          example: ABC Development Corporation
-        scale:
-          type: string
-          example: 25 floors, 200 units
-        description:
-          type: string
-          example: Premier residential complex in the heart of the city
-        map_lat:
-          type: number
-          format: double
-          example: 10.762622
-        map_lng:
-          type: number
-          format: double
-          example: 106.660172
-        map_zoom:
-          type: integer
-          format: int16
-          example: 16
-        updated_by:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440000
-        updated_at:
-          type: string
-          format: date-time
-          example: "2026-03-27T10:30:00Z"
-
-    # ==================== REGISTRATION SCHEMAS ====================
-    CreateRegistrationRequest:
-      type: object
-      required:
-        - full_name
-        - phone
-        - interests
-      properties:
-        full_name:
-          type: string
-          example: Nguyen Van A
-        phone:
-          type: string
-          example: "+84901234567"
-        email:
-          type: string
-          format: email
-          example: nguyenvana@example.com
-        address:
-          type: string
-          example: District 1, Ho Chi Minh City
-        note:
-          type: string
-          example: Interested in 2-bedroom units
-        interests:
-          type: array
-          items:
-            type: string
-          example: ["Apartment", "Penthouse"]
-
-    UpdateRegistrationRequest:
-      type: object
-      properties:
-        is_contacted:
-          type: boolean
-          example: true
-        note:
-          type: string
-          example: Called on 2026-03-28, will visit showroom next week
-
-    RegistrationResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440008
-        full_name:
-          type: string
-          example: Nguyen Van A
-        phone:
-          type: string
-          example: "+84901234567"
-        email:
-          type: string
-          example: nguyenvana@example.com
-        address:
-          type: string
-          example: District 1, Ho Chi Minh City
-        note:
-          type: string
-          example: Interested in 2-bedroom units
-        is_contacted:
-          type: boolean
-          example: false
-        contacted_by:
-          type: string
-          format: uuid
-          nullable: true
-          example: null
-        contacted_at:
-          type: string
-          format: date-time
-          nullable: true
-          example: null
-        created_at:
-          type: string
-          format: date-time
-          example: "2026-03-27T10:30:00Z"
-        interests:
-          type: array
-          items:
-            type: string
-          example: ["Apartment", "Penthouse"]
-
-    # ==================== REGISTRATION INTEREST SCHEMAS ====================
-    CreateRegistrationInterestRequest:
-      type: object
-      required:
-        - registration_id
-        - product_type
-      properties:
-        registration_id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440008
-        product_type:
-          type: string
-          example: Apartment
-
-    RegistrationInterestResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440009
-        registration_id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440008
-        product_type:
-          type: string
-          example: Apartment
-
-    # ==================== SITE SETTINGS SCHEMAS ====================
-    UpdateSiteSettingsRequest:
-      type: object
-      properties:
-        hotline:
-          type: string
-          example: "1900-xxxx"
-        email:
-          type: string
-          format: email
-          example: contact@vip.example.com
-        address:
-          type: string
-          example: 123 Main Street, District 1, HCMC
-        zalo_link:
-          type: string
-          format: uri
-          example: https://zalo.me/vipluxury
-        facebook_link:
-          type: string
-          format: uri
-          example: https://facebook.com/vipluxury
-        logo_url:
-          type: string
-          format: uri
-          example: https://cdn.example.com/logo.png
-        tagline:
-          type: string
-          example: Luxury Living Redefined
-
-    SiteSettingsResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440010
-        hotline:
-          type: string
-          example: "1900-xxxx"
-        email:
-          type: string
-          example: contact@vip.example.com
-        address:
-          type: string
-          example: 123 Main Street, District 1, HCMC
-        zalo_link:
-          type: string
-          example: https://zalo.me/vipluxury
-        facebook_link:
-          type: string
-          example: https://facebook.com/vipluxury
-        logo_url:
-          type: string
-          example: https://cdn.example.com/logo.png
-        tagline:
-          type: string
-          example: Luxury Living Redefined
-        updated_by:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440000
-        updated_at:
-          type: string
-          format: date-time
-          example: "2026-03-27T10:30:00Z"
-
-    # ==================== ERROR SCHEMA ====================
-    Error:
+    # Common
+    ErrorResponse:
       type: object
       properties:
         error:
           type: string
-          example: Invalid request
-        message:
-          type: string
-          example: Missing required field 'username'
+
+    # Auth
+    RegisterAdminRequest:
+      type: object
+      required: [username, password, full_name]
+      properties:
+        username: { type: string }
+        password: { type: string }
+        full_name: { type: string }
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string }
+        password: { type: string }
+    AdminResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        username: { type: string }
+        full_name: { type: string }
+        is_active: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    # Admin
+    UpdateProfileRequest:
+      type: object
+      properties:
+        username: { type: string }
+        full_name: { type: string }
+    ChangePasswordRequest:
+      type: object
+      required: [old_password, new_password]
+      properties:
+        old_password: { type: string }
+        new_password: { type: string }
+
+    # Products
+    CreateProductRequest:
+      type: object
+      required: [type, name, price]
+      properties:
+        type: { type: string }
+        name: { type: string }
+        price: { type: string }
+        area: { type: string }
+        description: { type: string }
+        is_active: { type: boolean }
+    UpdateProductRequest:
+      type: object
+      properties:
+        type: { type: string }
+        name: { type: string }
+        price: { type: string }
+        area: { type: string }
+        description: { type: string }
+        is_active: { type: boolean }
+    ProductResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string }
+        name: { type: string }
+        price: { type: string }
+        area: { type: string }
+        description: { type: string }
+        is_active: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    # Product Images
+    CreateProductImageRequest:
+      type: object
+      required: [product_id, url]
+      properties:
+        product_id: { type: string, format: uuid }
+        url: { type: string }
+        is_cover: { type: boolean }
+        sort_order: { type: integer }
+    UpdateProductImageRequest:
+      type: object
+      properties:
+        product_id: { type: string, format: uuid }
+        url: { type: string }
+        is_cover: { type: boolean }
+        sort_order: { type: integer }
+    ProductImageResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        product_id: { type: string, format: uuid }
+        url: { type: string }
+        is_cover: { type: boolean }
+        sort_order: { type: integer }
+        uploaded_by: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+
+    # Floor Plans
+    CreateFloorPlanRequest:
+      type: object
+      required: [title, url]
+      properties:
+        title: { type: string }
+        url: { type: string }
+        sort_order: { type: integer }
+        is_active: { type: boolean }
+    UpdateFloorPlanRequest:
+      type: object
+      properties:
+        title: { type: string }
+        url: { type: string }
+        sort_order: { type: integer }
+        is_active: { type: boolean }
+    FloorPlanResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        url: { type: string }
+        sort_order: { type: integer }
+        is_active: { type: boolean }
+        uploaded_by: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+
+    # Media
+    CreateMediaRequest:
+      type: object
+      required: [type, url]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        url: { type: string }
+        thumbnail: { type: string }
+        sort_order: { type: integer }
+        is_active: { type: boolean }
+    UpdateMediaRequest:
+      type: object
+      properties:
+        type: { type: string }
+        title: { type: string }
+        url: { type: string }
+        thumbnail: { type: string }
+        sort_order: { type: integer }
+        is_active: { type: boolean }
+    MediaResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string }
+        title: { type: string }
+        url: { type: string }
+        thumbnail: { type: string }
+        sort_order: { type: integer }
+        is_active: { type: boolean }
+        uploaded_by: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+
+    # Registrations
+    CreateRegistrationRequest:
+      type: object
+      required: [full_name, phone]
+      properties:
+        full_name: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        address: { type: string }
+        note: { type: string }
+        interests: { type: array, items: { type: string } }
+    UpdateRegistrationRequest:
+      type: object
+      properties:
+        is_contacted: { type: boolean }
+        note: { type: string }
+    RegistrationResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        full_name: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        address: { type: string }
+        note: { type: string }
+        is_contacted: { type: boolean }
+        contacted_by: { type: string, format: uuid }
+        contacted_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        interests: { type: array, items: { type: string } }
+
+    # Project Info
+    CreateProjectInfoRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        developer: { type: string }
+        scale: { type: string }
+        description: { type: string }
+        map_lat: { type: number }
+        map_lng: { type: number }
+        map_zoom: { type: integer }
+    UpdateProjectInfoRequest:
+      type: object
+      properties:
+        name: { type: string }
+        developer: { type: string }
+        scale: { type: string }
+        description: { type: string }
+        map_lat: { type: number }
+        map_lng: { type: number }
+        map_zoom: { type: integer }
+    ProjectInfoResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        developer: { type: string }
+        scale: { type: string }
+        description: { type: string }
+        map_lat: { type: number }
+        map_lng: { type: number }
+        map_zoom: { type: integer }
+        updated_by: { type: string, format: uuid }
+        updated_at: { type: string, format: date-time }
+
+    # Site Settings
+    UpdateSiteSettingsRequest:
+      type: object
+      properties:
+        hotline: { type: string }
+        email: { type: string }
+        address: { type: string }
+        zalo_link: { type: string }
+        facebook_link: { type: string }
+        logo_url: { type: string }
+        tagline: { type: string }
+    SiteSettingsResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        hotline: { type: string }
+        email: { type: string }
+        address: { type: string }
+        zalo_link: { type: string }
+        facebook_link: { type: string }
+        logo_url: { type: string }
+        tagline: { type: string }
+        updated_by: { type: string, format: uuid }
+        updated_at: { type: string, format: date-time }
+
+    # Activity Logs
+    ActivityLogResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        admin_id: { type: string, format: uuid }
+        action: { type: string }
+        entity: { type: string }
+        entity_id: { type: string, format: uuid }
+        detail: { type: string }
+        ip_address: { type: string }
+        created_at: { type: string, format: date-time }
+
+    # Admin Sessions
+    AdminSessionResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        admin_id: { type: string, format: uuid }
+        refresh_token: { type: string }
+        ip_address: { type: string }
+        user_agent: { type: string }
+        expires_at: { type: string, format: date-time }
+        revoked: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+paths:
+  # Auth
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new admin (Public)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/RegisterAdminRequest' } } }
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/AdminResponse' } } } }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login as admin (Public)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/LoginRequest' } } }
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/AdminResponse' } } } }
+        401: { description: Unauthorized }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout current session (Auth)
+      security: [{ AdminAuth: [] }, { CookieAuth: [] }]
+      responses:
+        200: { description: Success }
+
+  # Admin
+  /admin:
+    get:
+      tags: [Admin]
+      summary: Get all admins (Auth)
+      security: [{ AdminAuth: [] }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/AdminResponse' } } } } }
+
+  /admin/{id}:
+    get:
+      tags: [Admin]
+      summary: Get admin by ID (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/AdminResponse' } } } }
+        404: { description: Not Found }
+
+  /admin/username/{username}:
+    get:
+      tags: [Admin]
+      summary: Get admin by username (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: username, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/AdminResponse' } } } }
+
+  /admin/active:
+    get:
+      tags: [Admin]
+      summary: Get all active admins (Auth)
+      security: [{ AdminAuth: [] }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/AdminResponse' } } } } }
+
+  /admin/{id}/profile:
+    put:
+      tags: [Admin]
+      summary: Update admin profile (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateProfileRequest' } } }
+      responses:
+        200: { description: Success }
+
+  /admin/{id}/password:
+    put:
+      tags: [Admin]
+      summary: Change admin password (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/ChangePasswordRequest' } } }
+      responses:
+        200: { description: Success }
+
+  /admin/{id}/deactivate:
+    post:
+      tags: [Admin]
+      summary: Deactivate admin (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success }
+
+  /admin/{id}/activate:
+    post:
+      tags: [Admin]
+      summary: Activate admin (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success }
+
+  /admin/check-username/{username}:
+    get:
+      tags: [Admin]
+      summary: Check if username is available (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: username, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { type: object, properties: { available: { type: boolean } } } } } }
+
+  # Products
+  /products:
+    get:
+      tags: [Product]
+      summary: Get all products (Public)
+      responses:
+        200: { description: Success, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ProductResponse' } } } } }
+    post:
+      tags: [Product]
+      summary: Create new product (Auth)
+      security: [{ AdminAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateProductRequest' } } }
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/ProductResponse' } } } }
+
+  /products/{id}:
+    get:
+      tags: [Product]
+      summary: Get product by ID (Public)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/ProductResponse' } } } }
+    put:
+      tags: [Product]
+      summary: Update product (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateProductRequest' } } }
+      responses:
+        200: { description: Success }
+    delete:
+      tags: [Product]
+      summary: Delete product (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success }
+
+  /products/search:
+    get:
+      tags: [Product]
+      summary: Search products (Public)
+      parameters:
+        - { name: name, in: query, schema: { type: string } }
+        - { name: type, in: query, schema: { type: string } }
+        - { name: min_price, in: query, schema: { type: string } }
+        - { name: max_price, in: query, schema: { type: string } }
+      responses:
+        200: { description: Success, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ProductResponse' } } } } }
+
+  # Product Images
+  /productimages:
+    post:
+      tags: [ProductImage]
+      summary: Create product image (Auth)
+      security: [{ AdminAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateProductImageRequest' } } }
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/ProductImageResponse' } } } }
+
+  /productimages/{id}:
+    get:
+      tags: [ProductImage]
+      summary: Get product image by ID (Public)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/ProductImageResponse' } } } }
+    put:
+      tags: [ProductImage]
+      summary: Update product image (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateProductImageRequest' } } }
+      responses:
+        200: { description: Success }
+    delete:
+      tags: [ProductImage]
+      summary: Delete product image (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success }
+
+  /productimages/product/{product_id}:
+    get:
+      tags: [ProductImage]
+      summary: Get all images for a product (Public)
+      parameters: [{ name: product_id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ProductImageResponse' } } } } }
+
+  /productimages/product/{product_id}/active:
+    get:
+      tags: [ProductImage]
+      summary: Get active images for a product (Public)
+      parameters: [{ name: product_id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ProductImageResponse' } } } } }
+
+  # Floor Plans
+  /floorplans:
+    get:
+      tags: [FloorPlan]
+      summary: Get all floor plans (Public)
+      responses:
+        200: { description: Success, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/FloorPlanResponse' } } } } }
+    post:
+      tags: [FloorPlan]
+      summary: Create floor plan (Auth)
+      security: [{ AdminAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateFloorPlanRequest' } } }
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/FloorPlanResponse' } } } }
+
+  /floorplans/{id}:
+    get:
+      tags: [FloorPlan]
+      summary: Get floor plan by ID (Public)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/FloorPlanResponse' } } } }
+    put:
+      tags: [FloorPlan]
+      summary: Update floor plan (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateFloorPlanRequest' } } }
+      responses:
+        200: { description: Success }
+    delete:
+      tags: [FloorPlan]
+      summary: Delete floor plan (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success }
+
+  /floorplans/active:
+    get:
+      tags: [FloorPlan]
+      summary: Get active floor plans (Public)
+      responses:
+        200: { description: Success, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/FloorPlanResponse' } } } } }
+
+  # Media
+  /media:
+    get:
+      tags: [Media]
+      summary: Get all media (Public)
+      responses:
+        200: { description: Success, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MediaResponse' } } } } }
+    post:
+      tags: [Media]
+      summary: Create media (Auth)
+      security: [{ AdminAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateMediaRequest' } } }
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/MediaResponse' } } } }
+
+  /media/{id}:
+    get:
+      tags: [Media]
+      summary: Get media by ID (Public)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/MediaResponse' } } } }
+    put:
+      tags: [Media]
+      summary: Update media (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateMediaRequest' } } }
+      responses:
+        200: { description: Success }
+    delete:
+      tags: [Media]
+      summary: Delete media (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success }
+
+  /media/active:
+    get:
+      tags: [Media]
+      summary: Get active media (Public)
+      responses:
+        200: { description: Success, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MediaResponse' } } } } }
+
+  # Registrations
+  /registrations:
+    get:
+      tags: [Registration]
+      summary: Get all registrations (Auth)
+      security: [{ AdminAuth: [] }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/RegistrationResponse' } } } } }
+    post:
+      tags: [Registration]
+      summary: Create registration (Public)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateRegistrationRequest' } } }
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/RegistrationResponse' } } } }
+
+  /registrations/{id}:
+    get:
+      tags: [Registration]
+      summary: Get registration by ID (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/RegistrationResponse' } } } }
+    put:
+      tags: [Registration]
+      summary: Update registration (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateRegistrationRequest' } } }
+      responses:
+        200: { description: Success }
+    delete:
+      tags: [Registration]
+      summary: Delete registration (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success }
+
+  # Registration Interests
+  /registrationinterests:
+    post:
+      tags: [RegistrationInterest]
+      summary: Create interest (Public)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateRegistrationInterestRequest' } } }
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/RegistrationInterestResponse' } } } }
+
+  /registrationinterests/{id}:
+    delete:
+      tags: [RegistrationInterest]
+      summary: Delete interest (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success }
+
+  /registrationinterests/registration/{registration_id}:
+    get:
+      tags: [RegistrationInterest]
+      summary: Get interests by registration ID (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: registration_id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/RegistrationInterestResponse' } } } } }
+
+  # Project Info
+  /projectinfo:
+    get:
+      tags: [ProjectInfo]
+      summary: Get project info (Public)
+      responses:
+        200: { description: Success, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ProjectInfoResponse' } } } } }
+    post:
+      tags: [ProjectInfo]
+      summary: Create project info (Auth)
+      security: [{ AdminAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateProjectInfoRequest' } } }
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/ProjectInfoResponse' } } } }
+
+  /projectinfo/{id}:
+    get:
+      tags: [ProjectInfo]
+      summary: Get project info by ID (Public)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/ProjectInfoResponse' } } } }
+    put:
+      tags: [ProjectInfo]
+      summary: Update project info (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateProjectInfoRequest' } } }
+      responses:
+        200: { description: Success }
+    delete:
+      tags: [ProjectInfo]
+      summary: Delete project info (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success }
+
+  # Site Settings
+  /sitesettings:
+    get:
+      tags: [SiteSettings]
+      summary: Get site settings (Public)
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/SiteSettingsResponse' } } } }
+    put:
+      tags: [SiteSettings]
+      summary: Update site settings (Auth)
+      security: [{ AdminAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateSiteSettingsRequest' } } }
+      responses:
+        200: { description: Success }
+
+  # Activity Logs
+  /activitylogs:
+    get:
+      tags: [ActivityLog]
+      summary: Get all activity logs (Auth)
+      security: [{ AdminAuth: [] }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ActivityLogResponse' } } } } }
+
+  /activitylogs/admin/{admin_id}:
+    get:
+      tags: [ActivityLog]
+      summary: Get activity logs by admin ID (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: admin_id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ActivityLogResponse' } } } } }
+
+  # Admin Sessions
+  /adminsessions/{id}:
+    get:
+      tags: [AdminSession]
+      summary: Get session by ID (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/AdminSessionResponse' } } } }
+
+  /adminsessions/admin/{admin_id}:
+    get:
+      tags: [AdminSession]
+      summary: Get all sessions for an admin (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: admin_id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/AdminSessionResponse' } } } } }
+
+  /adminsessions/{id}/revoke:
+    post:
+      tags: [AdminSession]
+      summary: Revoke a session (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success }
+
+  /adminsessions/admin/{admin_id}/revoke-all:
+    post:
+      tags: [AdminSession]
+      summary: Revoke all sessions for an admin (Auth)
+      security: [{ AdminAuth: [] }]
+      parameters: [{ name: admin_id, in: path, required: true, schema: { type: string } }]
+      responses:
+        200: { description: Success }

@@ -25,12 +25,12 @@ export namespace repo::site_settings {
   co_return domain::SiteSettings{std::move(results[0])};
 }
 
-[[nodiscard]] drogon::Task<void> Update(const domain::SiteSettings& s) {
+[[nodiscard]] drogon::Task<void> Update(domain::SiteSettings s) {
   drogon::orm::CoroMapper<drogon_model::qlattt::SiteSettings> mapper{drogon::app().getDbClient()};
   co_await mapper.update(s);
 }
 
-[[nodiscard]] drogon::Task<void> Create(const domain::SiteSettings& s) {
+[[nodiscard]] drogon::Task<void> Create(domain::SiteSettings s) {
   drogon::orm::CoroMapper<drogon_model::qlattt::SiteSettings> mapper{drogon::app().getDbClient()};
   co_await mapper.insert(s);
 }

@@ -3,7 +3,7 @@
 
 using namespace api::v1;
 
-Task<> productimages::Create(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, dto::CreateProductImageRequest&& request) {
+Task<> productimages::Create(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, dto::CreateProductImageRequest request) {
   auto response{co_await service::product_images::Create(std::move(request))};
   auto json{glz::write_json(response)};
   auto resp{HttpResponse::newHttpResponse()};
@@ -13,7 +13,7 @@ Task<> productimages::Create(HttpRequestPtr req, std::function<void(const HttpRe
   co_return;
 }
 
-Task<> productimages::Update(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id, dto::UpdateProductImageRequest&& request) {
+Task<> productimages::Update(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id, dto::UpdateProductImageRequest request) {
   co_await service::product_images::Update(id, std::move(request));
   callback(HttpResponse::newHttpResponse());
   co_return;

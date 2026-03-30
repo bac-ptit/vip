@@ -21,6 +21,9 @@ find_package(Drogon CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Drogon::Drogon)
 find_package(unofficial-sodium CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE unofficial-sodium::sodium)
+# find_package(google_cloud_cpp_storage CONFIG REQUIRED)
+# target_link_libraries(${PROJECT_NAME} PRIVATE google-cloud-cpp::storage)
+
 # ##############################################################################
 
 aux_source_directory(controllers CTL_SRC)

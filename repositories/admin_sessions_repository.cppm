@@ -9,6 +9,7 @@ module;
 #include <optional>
 #include <string>
 #include <vector>
+#include <ranges>
 
 export module repo:admin_sessions;
 
@@ -16,7 +17,7 @@ import domain;
 
 export namespace repo::admin_sessions {
 
-[[nodiscard]] drogon::Task<std::optional<domain::AdminSessions>> FindById(const std::string& id) {
+[[nodiscard]] drogon::Task<std::optional<domain::AdminSessions>> FindById(std::string id) {
   drogon::orm::CoroMapper<drogon_model::qlattt::AdminSessions> mapper{drogon::app().getDbClient()};
   try {
     auto result{co_await mapper.findByPrimaryKey(id)};
@@ -26,7 +27,7 @@ export namespace repo::admin_sessions {
   }
 }
 
-[[nodiscard]] drogon::Task<std::optional<domain::AdminSessions>> FindByRefreshToken(const std::string& token) {
+[[nodiscard]] drogon::Task<std::optional<domain::AdminSessions>> FindByRefreshToken(std::string token) {
   drogon::orm::CoroMapper<drogon_model::qlattt::AdminSessions> mapper{drogon::app().getDbClient()};
   auto results{co_await mapper.findBy(drogon::orm::Criteria(drogon_model::qlattt::AdminSessions::Cols::_refresh_token, drogon::orm::CompareOperator::EQ, token))};
   if (results.empty()) {
@@ -35,35 +36,33 @@ export namespace repo::admin_sessions {
   co_return domain::AdminSessions{std::move(results[0])};
 }
 
-[[nodiscard]] drogon::Task<std::vector<domain::AdminSessions>> FindByAdminId(const std::string& adminId) {
+[[nodiscard]] drogon::Task<std::vector<domain::AdminSessions>> FindByAdminId(std::string adminId) {
   drogon::orm::CoroMapper<drogon_model::qlattt::AdminSessions> mapper{drogon::app().getDbClient()};
   auto results{co_await mapper.findBy(drogon::orm::Criteria(drogon_model::qlattt::AdminSessions::Cols::_admin_id, drogon::orm::CompareOperator::EQ, adminId))};
-  std::vector<domain::AdminSessions> domain_results;
-  domain_results.reserve(results.size());
-  for (auto& r : results) {
-    domain_results.emplace_back(std::move(r));
-  }
-  co_return domain_results;
+  
+  co_return results | std::views::transform([](auto&& r) {
+    return domain::AdminSessions{std::move(r)};
+  }) | std::ranges::to<std::vector>();
 }
 
-[[nodiscard]] drogon::Task<void> Create(const domain::AdminSessions& session) {
+[[nodiscard]] drogon::Task<void> Create(domain::AdminSessions session) {
   drogon::orm::CoroMapper<drogon_model::qlattt::AdminSessions> mapper{drogon::app().getDbClient()};
   co_await mapper.insert(session);
 }
 
-[[nodiscard]] drogon::Task<void> Update(const domain::AdminSessions& session) {
+[[nodiscard]] drogon::Task<void> Update(domain::AdminSessions session) {
   drogon::orm::CoroMapper<drogon_model::qlattt::AdminSessions> mapper{drogon::app().getDbClient()};
   co_await mapper.update(session);
 }
 
-[[nodiscard]] drogon::Task<void> DeleteById(const std::string& id) {
+[[nodiscard]] drogon::Task<void> DeleteById(std::string id) {
   drogon::orm::CoroMapper<drogon_model::qlattt::AdminSessions> mapper{drogon::app().getDbClient()};
   co_await mapper.deleteByPrimaryKey(id);
 }
 
-[[nodiscard]] drogon::Task<void> DeleteByAdminId(const std::string& adminId) {
+[[nodiscard]] drogon::Task<void> DeleteByAdminId(std::string adminId) {
   drogon::orm::CoroMapper<drogon_model::qlattt::AdminSessions> mapper{drogon::app().getDbClient()};
-  co_await mapper.deleteBy(drogon::orm::Criteria(drogon_model::qlattt::AdminSessions::Cols::_admin_id, drogon::orm::CompareOperator::EQ, adminId));
+  co_await mapper.deleteBy(drogon::orm::Criteria(drogon_model::qlattt::AdminSessions::Cols::_admin_id, drogon::orm::CompareOperator::EQ, std::move(adminId)));
 }
 
 }  // namespace repo::admin_sessions

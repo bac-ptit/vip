@@ -7,8 +7,8 @@ module;
 #include <models/RegistrationInterests.h>
 #include <optional>
 #include <string>
-#include <string_view>
 #include <vector>
+#include <ranges>
 
 module service;
 
@@ -30,22 +30,22 @@ static dto::RegistrationInterestResponse MapToResponse(
 drogon::Task<dto::RegistrationInterestResponse> Create(
     dto::CreateRegistrationInterestRequest request) {
   domain::RegistrationInterests ri;
-  ri.setRegistrationId(request.registration_id);
-  ri.setProductType(request.product_type);
+  ri.setRegistrationId(std::move(request.registration_id));
+  ri.setProductType(std::move(request.product_type));
 
-  auto created_ri{co_await repo::registration_interests::Create(ri)};
+  auto created_ri{co_await repo::registration_interests::Create(std::move(ri))};
   co_return MapToResponse(created_ri);
 }
 
 drogon::Task<std::vector<dto::RegistrationInterestResponse>>
-GetByRegistrationId(std::string_view registration_id) {
+GetByRegistrationId(std::string registration_id) {
   auto interests{
-      co_await repo::registration_interests::FindByRegistrationId(registration_id)};
+      co_await repo::registration_interests::FindByRegistrationId(std::move(registration_id))};
   std::vector<dto::RegistrationInterestResponse> responses;
   responses.reserve(interests.size());
-  for (auto&& ri : interests) {
-    responses.push_back(MapToResponse(ri));
-  }
+  
+  std::ranges::transform(interests, std::back_inserter(responses), MapToResponse);
+  
   co_return responses;
 }
 
@@ -53,14 +53,14 @@ drogon::Task<std::vector<dto::RegistrationInterestResponse>> GetAll() {
   auto interests{co_await repo::registration_interests::FindAll()};
   std::vector<dto::RegistrationInterestResponse> responses;
   responses.reserve(interests.size());
-  for (auto&& ri : interests) {
-    responses.push_back(MapToResponse(ri));
-  }
+  
+  std::ranges::transform(interests, std::back_inserter(responses), MapToResponse);
+  
   co_return responses;
 }
 
-drogon::Task<void> Delete(std::string_view id) {
-  co_await repo::registration_interests::DeleteById(id);
+drogon::Task<void> Delete(std::string id) {
+  co_await repo::registration_interests::DeleteById(std::move(id));
 }
 
 }  // namespace service::registration_interests

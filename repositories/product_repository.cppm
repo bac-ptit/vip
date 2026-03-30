@@ -7,6 +7,7 @@ module;
 #include <drogon/orm/CoroMapper.h>
 #include <model.h>
 #include <optional>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -26,11 +27,11 @@ using ProductsModel = drogon_model::qlattt::Products;
   co_return Product{std::move(res)};
 }
 
-[[nodiscard]] drogon::Task<std::optional<Product>> FindById(std::string_view id) {
+[[nodiscard]] drogon::Task<std::optional<Product>> FindById(std::string id) {
   auto db{drogon::app().getFastDbClient()};
   drogon::orm::CoroMapper<ProductsModel> mapper{db};
   try {
-    auto res{co_await mapper.findByPrimaryKey(std::string{id})};
+    auto res{co_await mapper.findByPrimaryKey(std::move(id))};
     co_return Product{std::move(res)};
   } catch (...) {
     co_return std::nullopt;
@@ -41,12 +42,8 @@ using ProductsModel = drogon_model::qlattt::Products;
   auto db{drogon::app().getFastDbClient()};
   drogon::orm::CoroMapper<ProductsModel> mapper{db};
   auto res{co_await mapper.findAll()};
-  std::vector<Product> products;
-  products.reserve(res.size());
-  for (auto& item : res) {
-    products.emplace_back(std::move(item));
-  }
-  co_return products;
+  co_return res | std::views::transform([](auto& item) { return Product{std::move(item)}; }) |
+            std::ranges::to<std::vector>();
 }
 
 [[nodiscard]] drogon::Task<std::vector<Product>> FindActive() {
@@ -54,12 +51,8 @@ using ProductsModel = drogon_model::qlattt::Products;
   drogon::orm::CoroMapper<ProductsModel> mapper{db};
   auto res{co_await mapper.findBy(drogon::orm::Criteria(
       ProductsModel::Cols::_is_active, drogon::orm::CompareOperator::EQ, true))};
-  std::vector<Product> products;
-  products.reserve(res.size());
-  for (auto& item : res) {
-    products.emplace_back(std::move(item));
-  }
-  co_return products;
+  co_return res | std::views::transform([](auto& item) { return Product{std::move(item)}; }) |
+            std::ranges::to<std::vector>();
 }
 
 [[nodiscard]] drogon::Task<size_t> Update(const Product& p) {
@@ -68,12 +61,12 @@ using ProductsModel = drogon_model::qlattt::Products;
   co_return co_await mapper.update(p);
 }
 
-[[nodiscard]] drogon::Task<bool> DeleteById(std::string_view id) {
+[[nodiscard]] drogon::Task<bool> DeleteById(std::string id) {
   auto db{drogon::app().getFastDbClient()};
   drogon::orm::CoroMapper<ProductsModel> mapper{db};
   auto count{co_await mapper.deleteBy(
       drogon::orm::Criteria(ProductsModel::Cols::_id,
-                            drogon::orm::CompareOperator::EQ, std::string{id}))};
+                            drogon::orm::CompareOperator::EQ, std::move(id)))};
   co_return count > 0;
 }
 

@@ -3,7 +3,7 @@
 
 using namespace api::v1;
 
-Task<> products::Create(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, dto::CreateProductRequest&& request) {
+Task<> products::Create(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, dto::CreateProductRequest request) {
   auto response{co_await service::product::Create(std::move(request))};
   auto json{glz::write_json(response)};
   auto resp{HttpResponse::newHttpResponse()};
@@ -13,20 +13,20 @@ Task<> products::Create(HttpRequestPtr req, std::function<void(const HttpRespons
   co_return;
 }
 
-Task<> products::Update(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id, dto::UpdateProductRequest&& request) {
-  co_await service::product::Update(id, std::move(request));
+Task<> products::Update(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id, dto::UpdateProductRequest request) {
+  co_await service::product::Update(std::move(id), std::move(request));
   callback(HttpResponse::newHttpResponse());
   co_return;
 }
 
 Task<> products::Delete(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id) {
-  co_await service::product::Delete(id);
+  co_await service::product::Delete(std::move(id));
   callback(HttpResponse::newHttpResponse());
   co_return;
 }
 
 Task<> products::GetById(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id) {
-  auto response{service::product::GetById(id)};
+  auto response{service::product::GetById(std::move(id))};
   if (response) {
     auto json{glz::write_json(*response)};
     auto resp{HttpResponse::newHttpResponse()};

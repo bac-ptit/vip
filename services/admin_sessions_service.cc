@@ -30,42 +30,42 @@ static dto::AdminSessionResponse ToAdminSessionResponse(const domain::AdminSessi
   return response;
 }
 
-drogon::Task<std::optional<dto::AdminSessionResponse>> service::admin_sessions::GetById(const std::string& id) {
-  auto session{co_await repo::admin_sessions::FindById(id)};
+drogon::Task<std::optional<dto::AdminSessionResponse>> service::admin_sessions::GetById(std::string id) {
+  auto session{co_await repo::admin_sessions::FindById(std::move(id))};
   if (!session) {
     co_return std::nullopt;
   }
   co_return ToAdminSessionResponse(*session);
 }
 
-drogon::Task<std::optional<dto::AdminSessionResponse>> service::admin_sessions::GetByRefreshToken(const std::string& token) {
-  auto session{co_await repo::admin_sessions::FindByRefreshToken(token)};
+drogon::Task<std::optional<dto::AdminSessionResponse>> service::admin_sessions::GetByRefreshToken(std::string token) {
+  auto session{co_await repo::admin_sessions::FindByRefreshToken(std::move(token))};
   if (!session) {
     co_return std::nullopt;
   }
   co_return ToAdminSessionResponse(*session);
 }
 
-drogon::Task<std::vector<dto::AdminSessionResponse>> service::admin_sessions::GetByAdminId(const std::string& adminId) {
-  auto sessions{co_await repo::admin_sessions::FindByAdminId(adminId)};
+drogon::Task<std::vector<dto::AdminSessionResponse>> service::admin_sessions::GetByAdminId(std::string adminId) {
+  auto sessions{co_await repo::admin_sessions::FindByAdminId(std::move(adminId))};
   std::vector<dto::AdminSessionResponse> responses;
   responses.reserve(sessions.size());
-  for (auto&& s : sessions) {
-    responses.push_back(ToAdminSessionResponse(s));
-  }
+  
+  std::ranges::transform(sessions, std::back_inserter(responses), ToAdminSessionResponse);
+  
   co_return responses;
 }
 
-drogon::Task<void> service::admin_sessions::RevokeSession(const std::string& id) {
-  auto session{co_await repo::admin_sessions::FindById(id)};
+drogon::Task<void> service::admin_sessions::RevokeSession(std::string id) {
+  auto session{co_await repo::admin_sessions::FindById(std::move(id))};
   if (session) {
     session->setRevoked(true);
     co_await repo::admin_sessions::Update(*session);
   }
 }
 
-drogon::Task<void> service::admin_sessions::RevokeAllAdminSessions(const std::string& adminId) {
-  auto sessions{co_await repo::admin_sessions::FindByAdminId(adminId)};
+drogon::Task<void> service::admin_sessions::RevokeAllAdminSessions(std::string adminId) {
+  auto sessions{co_await repo::admin_sessions::FindByAdminId(std::move(adminId))};
   for (auto&& s : sessions) {
     if (!s.getValueOfRevoked()) {
       s.setRevoked(true);

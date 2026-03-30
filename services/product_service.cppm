@@ -19,7 +19,7 @@ export namespace service::product {
 /**
  * @brief Initialize the product cache from the database.
  */
-[[maybe_unused]]drogon::Task<void> InitializeCache();
+drogon::Task<void> InitializeCache();
 
 /**
  * @brief Create a new product and update the cache.
@@ -31,18 +31,18 @@ export namespace service::product {
  * @brief Update an existing product and the cache.
  */
 [[nodiscard]] drogon::Task<void> Update(
-    std::string_view id, dto::UpdateProductRequest request);
+    std::string id, dto::UpdateProductRequest request);
 
 /**
  * @brief Delete a product and update the cache.
  */
-[[nodiscard]] drogon::Task<void> Delete(std::string_view id);
+[[nodiscard]] drogon::Task<void> Delete(std::string id);
 
 /**
  * @brief Get product by ID (from cache).
  */
 [[nodiscard]] std::optional<dto::ProductResponse> GetById(
-    std::string_view id);
+    std::string id);
 
 /**
  * @brief Get all products (from cache).
@@ -53,6 +53,6 @@ export namespace service::product {
  * @brief Search products in the cache.
  */
 [[nodiscard]] std::vector<dto::ProductResponse> Search(
-    const dto::ProductSearchQuery& query);
+    dto::ProductSearchQuery query);
 
 }  // namespace service::product

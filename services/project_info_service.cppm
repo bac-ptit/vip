@@ -26,18 +26,18 @@ export namespace service::project_info {
  * @brief Update project info.
  */
 [[nodiscard]] drogon::Task<void> Update(
-    std::string_view id, dto::UpdateProjectInfoRequest request);
+    std::string id, dto::UpdateProjectInfoRequest request);
 
 /**
  * @brief Delete project info.
  */
-[[nodiscard]] drogon::Task<void> Delete(std::string_view id);
+[[nodiscard]] drogon::Task<void> Delete(std::string id);
 
 /**
  * @brief Get project info by ID.
  */
 [[nodiscard]] drogon::Task<std::optional<dto::ProjectInfoResponse>> GetById(
-    std::string_view id);
+    std::string id);
 
 /**
  * @brief Get all project info.

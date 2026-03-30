@@ -21,10 +21,21 @@ import domain;
 using namespace drogon;
 
 namespace {
-// Thread-safe in-memory cache
 std::unordered_map<std::string, dto::ProductResponse> product_cache;
+std::vector<dto::ProductResponse> product_cache_vec;  // thêm cái này
 std::shared_mutex cache_mutex;
 
+void RebuildVec() {  // gọi sau mỗi write
+  product_cache_vec.clear();
+  product_cache_vec.reserve(product_cache.size());
+  for (auto& [k, v] : product_cache) {
+    product_cache_vec.push_back(v);
+  }
+}
+}
+
+namespace {
+// Thread-safe in-memory cache
 dto::ProductResponse ToProductResponse(const domain::Product& p) {
   dto::ProductResponse resp;
   resp.id = p.getId();
@@ -60,7 +71,7 @@ drogon::Task<dto::ProductResponse> service::product::Create(
   if (request.description) p.setDescription(std::move(*request.description));
   p.setIsActive(request.is_active);
 
-  auto created{co_await repo::product::Create(p)};
+  auto created{co_await repo::product::Create(std::move(p))};
   auto resp{ToProductResponse(created)};
 
   {
@@ -71,7 +82,7 @@ drogon::Task<dto::ProductResponse> service::product::Create(
 }
 
 drogon::Task<void> service::product::Update(
-    std::string_view id, dto::UpdateProductRequest request) {
+    std::string id, dto::UpdateProductRequest request) {
   auto existing_opt{co_await repo::product::FindById(id)};
   if (!existing_opt) {
     throw std::runtime_error{"Product not found"};
@@ -91,22 +102,22 @@ drogon::Task<void> service::product::Update(
 
   {
     std::unique_lock lock{cache_mutex};
-    product_cache[std::string{id}] = updated_resp;
+    product_cache[std::move(id)] = updated_resp;
   }
 }
 
-drogon::Task<void> service::product::Delete(std::string_view id) {
+drogon::Task<void> service::product::Delete(std::string id) {
   auto deleted{co_await repo::product::DeleteById(id)};
   if (deleted) {
     std::unique_lock lock{cache_mutex};
-    product_cache.erase(std::string{id});
+    product_cache.erase(std::move(id));
   }
 }
 
 std::optional<dto::ProductResponse> service::product::GetById(
-    std::string_view id) {
+    std::string id) {
   std::shared_lock lock{cache_mutex};
-  if (auto it{product_cache.find(std::string{id})}; it != product_cache.end()) {
+  if (auto it{product_cache.find(id)}; it != product_cache.end()) {
     return it->second;
   }
   return std::nullopt;
@@ -114,32 +125,22 @@ std::optional<dto::ProductResponse> service::product::GetById(
 
 std::vector<dto::ProductResponse> service::product::GetAll() {
   std::shared_lock lock{cache_mutex};
-  std::vector<dto::ProductResponse> result;
-  result.reserve(product_cache.size());
-  for (const auto& [id, product] : product_cache) {
-    result.push_back(product);
-  }
-  return result;
+  return product_cache_vec;  // zero copy, zero alloc
 }
 
 std::vector<dto::ProductResponse> service::product::Search(
-    const dto::ProductSearchQuery& query) {
+    dto::ProductSearchQuery query) {
   std::shared_lock lock{cache_mutex};
   
-  auto all_view{product_cache | std::views::values};
-  
-  auto filtered_view = all_view | std::views::filter([&query](const dto::ProductResponse& p) {
+  auto filtered_view{product_cache | std::views::values | std::views::filter([&query](const dto::ProductResponse& p) {
     if (query.name && p.name && p.name->find(*query.name) == std::string::npos) return false;
     if (query.type && p.type && *p.type != *query.type) return false;
-    // Simple price comparison (as string/double depending on business logic)
     if (query.min_price && p.price && std::stod(*p.price) < std::stod(*query.min_price)) return false;
     if (query.max_price && p.price && std::stod(*p.price) > std::stod(*query.max_price)) return false;
     return true;
-  });
+  })};
 
   std::vector<dto::ProductResponse> result;
-  for (const auto& p : filtered_view) {
-    result.push_back(p);
-  }
+  std::ranges::copy(filtered_view, std::back_inserter(result));
   return result;
 }

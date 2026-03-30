@@ -65,14 +65,14 @@ drogon::Task<dto::AdminResponse> service::admin::Register(
   admin.setIsActive(true);
 
   // Create in database
-  auto created{co_await repo::admin::Create(admin)};
+  auto created{co_await repo::admin::Create(std::move(admin))};
   co_return ToAdminResponse(created);
 }
 
 drogon::Task<std::optional<dto::AdminResponse>> service::admin::Login(
-    dto::LoginRequest&& request) {
+    dto::LoginRequest request) {
   // Find admin by username
-  auto password = std::move(request.password);
+  auto password{std::move(request.password)};
   auto admin{co_await repo::admin::FindByUsername(request.username)};
   if (!admin) {
     co_return std::nullopt;
@@ -95,7 +95,7 @@ drogon::Task<std::optional<dto::AdminResponse>> service::admin::Login(
 }
 
 drogon::Task<void> service::admin::UpdateProfile(
-    std::string_view id, dto::UpdateProfileRequest request) {
+    std::string id, dto::UpdateProfileRequest request) {
   // Get existing admin
   auto admin{co_await repo::admin::FindById(id)};
   if (!admin) {
@@ -103,7 +103,7 @@ drogon::Task<void> service::admin::UpdateProfile(
   }
 
   // Update username if provided
-  if (request.username.has_value()) {
+  if (request.username) {
     // Check if new username is taken by another admin
     auto existing{co_await repo::admin::FindByUsername(*request.username)};
     if (existing && existing->getValueOfId() != id) {
@@ -113,7 +113,7 @@ drogon::Task<void> service::admin::UpdateProfile(
   }
 
   // Update full name if provided
-  if (request.full_name.has_value()) {
+  if (request.full_name) {
     admin->SetFullName(std::move(*request.full_name));
   }
 
@@ -122,7 +122,7 @@ drogon::Task<void> service::admin::UpdateProfile(
 }
 
 drogon::Task<void> service::admin::ChangePassword(
-    std::string_view id, dto::ChangePasswordRequest request) {
+    std::string id, dto::ChangePasswordRequest request) {
   // Get existing admin
   auto admin{co_await repo::admin::FindById(id)};
   if (!admin) {
@@ -141,14 +141,14 @@ drogon::Task<void> service::admin::ChangePassword(
   co_await repo::admin::Update(*admin);
 }
 
-drogon::Task<void> service::admin::Deactivate(std::string_view id) {
-  auto success{co_await repo::admin::SoftDeleteById(id)};
+drogon::Task<void> service::admin::Deactivate(std::string id) {
+  auto success{co_await repo::admin::SoftDeleteById(std::move(id))};
   if (!success) {
     throw std::runtime_error("Admin not found");
   }
 }
 
-drogon::Task<void> service::admin::Activate(std::string_view id) {
+drogon::Task<void> service::admin::Activate(std::string id) {
   auto admin{co_await repo::admin::FindById(id)};
   if (!admin) {
     throw std::runtime_error("Admin not found");
@@ -159,8 +159,8 @@ drogon::Task<void> service::admin::Activate(std::string_view id) {
 }
 
 drogon::Task<std::optional<dto::AdminResponse>> service::admin::GetById(
-    std::string_view id) {
-  auto admin{co_await repo::admin::FindById(id)};
+    std::string id) {
+  auto admin{co_await repo::admin::FindById(std::move(id))};
   if (!admin) {
     co_return std::nullopt;
   }
@@ -168,8 +168,8 @@ drogon::Task<std::optional<dto::AdminResponse>> service::admin::GetById(
 }
 
 drogon::Task<std::optional<dto::AdminResponse>> service::admin::GetByUsername(
-    std::string_view username) {
-  auto admin{co_await repo::admin::FindByUsername(username)};
+    std::string username) {
+  auto admin{co_await repo::admin::FindByUsername(std::move(username))};
   if (!admin) {
     co_return std::nullopt;
   }
@@ -181,9 +181,7 @@ drogon::Task<std::vector<dto::AdminResponse>> service::admin::GetAll() {
   std::vector<dto::AdminResponse> responses;
   responses.reserve(admins.size());
   
-  for (const auto& admin : admins) {
-    responses.push_back(ToAdminResponse(admin));
-  }
+  std::ranges::transform(admins, std::back_inserter(responses), ToAdminResponse);
   
   co_return responses;
 }
@@ -193,15 +191,13 @@ drogon::Task<std::vector<dto::AdminResponse>> service::admin::GetActiveAdmins() 
   std::vector<dto::AdminResponse> responses;
   responses.reserve(admins.size());
   
-  for (const auto& admin : admins) {
-    responses.push_back(ToAdminResponse(admin));
-  }
+  std::ranges::transform(admins, std::back_inserter(responses), ToAdminResponse);
   
   co_return responses;
 }
 
 drogon::Task<bool> service::admin::IsUsernameAvailable(
-    std::string_view username) {
-  auto exists{co_await repo::admin::ExistsByUsername(username)};
+    std::string username) {
+  auto exists{co_await repo::admin::ExistsByUsername(std::move(username))};
   co_return !exists;
 }

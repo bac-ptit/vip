@@ -1,14 +1,18 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 project(vip_test CXX)
 
-add_executable(${PROJECT_NAME} test_main.cc)
+find_package(Drogon CONFIG REQUIRED)
+find_package(glaze CONFIG REQUIRED)
 
-# ##############################################################################
-# If you include the drogon source code locally in your project, use this method
-# to add drogon 
-# target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
-#
-# and comment out the following lines
-target_link_libraries(${PROJECT_NAME} PRIVATE Drogon::Drogon)
+# Basic test
+add_executable(vip_test test_main.cc)
+target_link_libraries(vip_test PRIVATE Drogon::Drogon)
+ParseAndAddDrogonTests(vip_test)
 
-ParseAndAddDrogonTests(${PROJECT_NAME})
+# Auth test (Client only)
+add_executable(test_auth test_auth.cc)
+target_link_libraries(test_auth PRIVATE 
+    Drogon::Drogon
+    glaze::glaze
+)
+ParseAndAddDrogonTests(test_auth)

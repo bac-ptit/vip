@@ -50,7 +50,7 @@ drogon::Task<dto::ProjectInfoResponse> service::project_info::Create(
 }
 
 drogon::Task<void> service::project_info::Update(
-    std::string_view id, dto::UpdateProjectInfoRequest request) {
+    std::string id, dto::UpdateProjectInfoRequest request) {
   auto existing_opt{co_await repo::project_info::FindById(id)};
   if (!existing_opt) {
     throw std::runtime_error{"Project info not found"};
@@ -69,13 +69,13 @@ drogon::Task<void> service::project_info::Update(
   co_await repo::project_info::Update(existing);
 }
 
-drogon::Task<void> service::project_info::Delete(std::string_view id) {
-  co_await repo::project_info::DeleteById(id);
+drogon::Task<void> service::project_info::Delete(std::string id) {
+  co_await repo::project_info::DeleteById(std::move(id));
 }
 
 drogon::Task<std::optional<dto::ProjectInfoResponse>> service::project_info::GetById(
-    std::string_view id) {
-  auto p_opt{co_await repo::project_info::FindById(id)};
+    std::string id) {
+  auto p_opt{co_await repo::project_info::FindById(std::move(id))};
   if (p_opt) {
     co_return ToProjectInfoResponse(std::move(*p_opt));
   }
@@ -86,8 +86,8 @@ drogon::Task<std::vector<dto::ProjectInfoResponse>> service::project_info::GetAl
   auto projects_raw{co_await repo::project_info::FindAll()};
   std::vector<dto::ProjectInfoResponse> result;
   result.reserve(projects_raw.size());
-  for (auto&& p : projects_raw) {
-    result.push_back(ToProjectInfoResponse(std::move(p)));
-  }
+  
+  std::ranges::transform(projects_raw, std::back_inserter(result), ToProjectInfoResponse);
+  
   co_return result;
 }

@@ -13,10 +13,10 @@ class adminsessions : public drogon::HttpController<adminsessions> {
  public:
   METHOD_LIST_BEGIN
   
-  METHOD_ADD(adminsessions::GetById, "/{1}", drogon::Get);
-  METHOD_ADD(adminsessions::GetByAdminId, "/admin/{1}", drogon::Get);
-  METHOD_ADD(adminsessions::Revoke, "/{1}/revoke", drogon::Post);
-  METHOD_ADD(adminsessions::RevokeAll, "/admin/{1}/revoke-all", drogon::Post);
+  METHOD_ADD(adminsessions::GetById, "/{1}", drogon::Get, "filter::AuthFilter");
+  METHOD_ADD(adminsessions::GetByAdminId, "/admin/{1}", drogon::Get, "filter::AuthFilter");
+  METHOD_ADD(adminsessions::Revoke, "/{1}/revoke", drogon::Post, "filter::AuthFilter");
+  METHOD_ADD(adminsessions::RevokeAll, "/admin/{1}/revoke-all", drogon::Post, "filter::AuthFilter");
   
   METHOD_LIST_END
 

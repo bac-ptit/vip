@@ -42,14 +42,14 @@ drogon::Task<dto::MediaResponse> service::media::Create(
   if (request.thumbnail) m.setThumbnail(std::move(*request.thumbnail));
   m.setSortOrder(request.sort_order);
   m.setIsActive(request.is_active);
-  if (admin_id) m.setUploadedBy(*admin_id);
+  if (admin_id) m.setUploadedBy(std::move(*admin_id));
 
   auto created{co_await repo::media::Create(m)};
   co_return ToMediaResponse(created);
 }
 
 drogon::Task<void> service::media::Update(
-    std::string_view id, dto::UpdateMediaRequest request) {
+    std::string id, dto::UpdateMediaRequest request) {
   auto existing_opt{co_await repo::media::FindById(id)};
   if (!existing_opt) {
     throw std::runtime_error{"Media not found"};
@@ -67,13 +67,13 @@ drogon::Task<void> service::media::Update(
   co_await repo::media::Update(existing);
 }
 
-drogon::Task<void> service::media::Delete(std::string_view id) {
-  co_await repo::media::DeleteById(id);
+drogon::Task<void> service::media::Delete(std::string id) {
+  co_await repo::media::DeleteById(std::move(id));
 }
 
 drogon::Task<std::optional<dto::MediaResponse>> service::media::GetById(
-    std::string_view id) {
-  auto m_opt{co_await repo::media::FindById(id)};
+    std::string id) {
+  auto m_opt{co_await repo::media::FindById(std::move(id))};
   if (m_opt) {
     co_return ToMediaResponse(std::move(*m_opt));
   }
@@ -84,9 +84,9 @@ drogon::Task<std::vector<dto::MediaResponse>> service::media::GetAll() {
   auto medias_raw{co_await repo::media::FindAll()};
   std::vector<dto::MediaResponse> result;
   result.reserve(medias_raw.size());
-  for (auto&& m : medias_raw) {
-    result.push_back(ToMediaResponse(std::move(m)));
-  }
+  
+  std::ranges::transform(medias_raw, std::back_inserter(result), ToMediaResponse);
+  
   co_return result;
 }
 
@@ -94,8 +94,8 @@ drogon::Task<std::vector<dto::MediaResponse>> service::media::GetActiveMedia() {
   auto medias_raw{co_await repo::media::FindActive()};
   std::vector<dto::MediaResponse> result;
   result.reserve(medias_raw.size());
-  for (auto&& m : medias_raw) {
-    result.push_back(ToMediaResponse(std::move(m)));
-  }
+  
+  std::ranges::transform(medias_raw, std::back_inserter(result), ToMediaResponse);
+  
   co_return result;
 }

@@ -40,12 +40,12 @@ drogon::Task<dto::FloorPlanResponse> service::floor_plans::Create(
   f.setIsActive(request.is_active);
   if (admin_id) f.setUploadedBy(*admin_id);
 
-  auto created{co_await repo::floor_plans::Create(f)};
+  auto created{co_await repo::floor_plans::Create(std::move(f))};
   co_return ToFloorPlanResponse(created);
 }
 
 drogon::Task<void> service::floor_plans::Update(
-    std::string_view id, dto::UpdateFloorPlanRequest request) {
+    std::string id, dto::UpdateFloorPlanRequest request) {
   auto existing_opt{co_await repo::floor_plans::FindById(id)};
   if (!existing_opt) {
     throw std::runtime_error{"Floor plan not found"};
@@ -61,13 +61,13 @@ drogon::Task<void> service::floor_plans::Update(
   co_await repo::floor_plans::Update(existing);
 }
 
-drogon::Task<void> service::floor_plans::Delete(std::string_view id) {
-  co_await repo::floor_plans::DeleteById(id);
+drogon::Task<void> service::floor_plans::Delete(std::string id) {
+  co_await repo::floor_plans::DeleteById(std::move(id));
 }
 
 drogon::Task<std::optional<dto::FloorPlanResponse>> service::floor_plans::GetById(
-    std::string_view id) {
-  auto f_opt{co_await repo::floor_plans::FindById(id)};
+    std::string id) {
+  auto f_opt{co_await repo::floor_plans::FindById(std::move(id))};
   if (f_opt) {
     co_return ToFloorPlanResponse(std::move(*f_opt));
   }
@@ -78,9 +78,9 @@ drogon::Task<std::vector<dto::FloorPlanResponse>> service::floor_plans::GetAll()
   auto floor_plans_raw{co_await repo::floor_plans::FindAll()};
   std::vector<dto::FloorPlanResponse> result;
   result.reserve(floor_plans_raw.size());
-  for (auto&& f : floor_plans_raw) {
-    result.push_back(ToFloorPlanResponse(std::move(f)));
-  }
+  
+  std::ranges::transform(floor_plans_raw, std::back_inserter(result), ToFloorPlanResponse);
+  
   co_return result;
 }
 
@@ -88,8 +88,8 @@ drogon::Task<std::vector<dto::FloorPlanResponse>> service::floor_plans::GetActiv
   auto floor_plans_raw{co_await repo::floor_plans::FindActive()};
   std::vector<dto::FloorPlanResponse> result;
   result.reserve(floor_plans_raw.size());
-  for (auto&& f : floor_plans_raw) {
-    result.push_back(ToFloorPlanResponse(std::move(f)));
-  }
+  
+  std::ranges::transform(floor_plans_raw, std::back_inserter(result), ToFloorPlanResponse);
+  
   co_return result;
 }

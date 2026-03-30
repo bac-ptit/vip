@@ -7,6 +7,7 @@ module;
 #include <drogon/orm/CoroMapper.h>
 #include <model.h>
 #include <optional>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -26,12 +27,11 @@ using FloorPlansModel = drogon_model::qlattt::FloorPlans;
   co_return FloorPlans{std::move(res)};
 }
 
-[[nodiscard]] drogon::Task<std::optional<FloorPlans>> FindById(
-    std::string_view id) {
+[[nodiscard]] drogon::Task<std::optional<FloorPlans>> FindById(std::string id) {
   auto db{drogon::app().getFastDbClient()};
   drogon::orm::CoroMapper<FloorPlansModel> mapper{db};
   try {
-    auto res{co_await mapper.findByPrimaryKey(std::string{id})};
+    auto res{co_await mapper.findByPrimaryKey(std::move(id))};
     co_return FloorPlans{std::move(res)};
   } catch (...) {
     co_return std::nullopt;
@@ -42,26 +42,19 @@ using FloorPlansModel = drogon_model::qlattt::FloorPlans;
   auto db{drogon::app().getFastDbClient()};
   drogon::orm::CoroMapper<FloorPlansModel> mapper{db};
   auto res{co_await mapper.findAll()};
-  std::vector<FloorPlans> floor_plans;
-  floor_plans.reserve(res.size());
-  for (auto& item : res) {
-    floor_plans.emplace_back(std::move(item));
-  }
-  co_return floor_plans;
+  co_return res |
+            std::views::transform([](auto& item) { return FloorPlans{std::move(item)}; }) |
+            std::ranges::to<std::vector>();
 }
 
 [[nodiscard]] drogon::Task<std::vector<FloorPlans>> FindActive() {
   auto db{drogon::app().getFastDbClient()};
   drogon::orm::CoroMapper<FloorPlansModel> mapper{db};
   auto res{co_await mapper.findBy(drogon::orm::Criteria(
-      FloorPlansModel::Cols::_is_active, drogon::orm::CompareOperator::EQ,
-      true))};
-  std::vector<FloorPlans> floor_plans;
-  floor_plans.reserve(res.size());
-  for (auto& item : res) {
-    floor_plans.emplace_back(std::move(item));
-  }
-  co_return floor_plans;
+      FloorPlansModel::Cols::_is_active, drogon::orm::CompareOperator::EQ, true))};
+  co_return res |
+            std::views::transform([](auto& item) { return FloorPlans{std::move(item)}; }) |
+            std::ranges::to<std::vector>();
 }
 
 [[nodiscard]] drogon::Task<size_t> Update(const FloorPlans& f) {
@@ -70,12 +63,11 @@ using FloorPlansModel = drogon_model::qlattt::FloorPlans;
   co_return co_await mapper.update(f);
 }
 
-[[nodiscard]] drogon::Task<bool> DeleteById(std::string_view id) {
+[[nodiscard]] drogon::Task<bool> DeleteById(std::string id) {
   auto db{drogon::app().getFastDbClient()};
   drogon::orm::CoroMapper<FloorPlansModel> mapper{db};
   auto count{co_await mapper.deleteBy(drogon::orm::Criteria(
-      FloorPlansModel::Cols::_id, drogon::orm::CompareOperator::EQ,
-      std::string{id}))};
+      FloorPlansModel::Cols::_id, drogon::orm::CompareOperator::EQ, std::move(id)))};
   co_return count > 0;
 }
 
