@@ -1,19 +1,16 @@
 //
 // Created by bac on 3/28/26.
 //
-module;
 #include <drogon/drogon.h>
 #include <models/ProductImages.h>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
-
-module service;
-
-import repo;
-import dto;
-import domain;
+#include "services/product_images_service.h"
+#include "repositories/repo.h"
+#include "dto/dto.h"
+#include "domains/domain.h"
 
 using namespace drogon;
 

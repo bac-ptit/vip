@@ -1,18 +1,15 @@
 //
 // Created by bac on 3/28/26.
 //
-module;
 #include <drogon/drogon.h>
 #include <models/SiteSettings.h>
 #include <optional>
 #include <string>
 #include <vector>
-
-module service;
-
-import repo;
-import dto;
-import domain;
+#include "services/site_settings_service.h"
+#include "repositories/repo.h"
+#include "dto/dto.h"
+#include "domains/domain.h"
 
 using namespace drogon;
 

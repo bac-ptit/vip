@@ -1,0 +1,12 @@
+#pragma once
+#include "services/admin_service.h"
+#include "services/product_service.h"
+#include "services/project_info_service.h"
+#include "services/media_service.h"
+#include "services/product_images_service.h"
+#include "services/floor_plans_service.h"
+#include "services/registrations_service.h"
+#include "services/registration_interests_service.h"
+#include "services/site_settings_service.h"
+#include "services/admin_sessions_service.h"
+#include "services/activity_logs_service.h"

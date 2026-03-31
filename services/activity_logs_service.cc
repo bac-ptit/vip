@@ -1,19 +1,16 @@
 //
 // Created by bac on 3/29/26.
 //
-module;
 #include <drogon/drogon.h>
 #include <models/ActivityLogs.h>
 #include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-module service;
-
-import domain;
-import repo;
-import dto;
+#include "services/activity_logs_service.h"
+#include "domains/domain.h"
+#include "repositories/repo.h"
+#include "dto/dto.h"
 
 using namespace drogon;
 

@@ -1,0 +1,12 @@
+#pragma once
+#include "domains/admin.h"
+#include "domains/product.h"
+#include "domains/project_info.h"
+#include "domains/media.h"
+#include "domains/product_images.h"
+#include "domains/floor_plans.h"
+#include "domains/registrations.h"
+#include "domains/registration_interests.h"
+#include "domains/site_settings.h"
+#include "domains/admin_sessions.h"
+#include "domains/activity_logs.h"

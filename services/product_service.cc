@@ -1,7 +1,6 @@
 //
 // Created by bac on 3/27/26.
 //
-module;
 #include <drogon/drogon.h>
 #include <glaze/glaze.hpp>
 #include <mutex>
@@ -12,12 +11,10 @@ module;
 #include <string_view>
 #include <unordered_map>
 #include <vector>
-
-module service;
-
-import repo;
-import dto;
-import domain;
+#include "services/product_service.h"
+#include "repositories/repo.h"
+#include "dto/dto.h"
+#include "domains/domain.h"
 
 using namespace drogon;
 

@@ -1,11 +1,9 @@
 //
 // Created by bac on 3/27/26.
 //
-module;
 #include <sodium.h>
 #include <string>
-
-module utils;
+#include "utils/password_hasher.h"
 
 
 namespace utils::password_hasher {
