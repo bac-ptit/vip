@@ -1,12 +1,9 @@
 //
 // Created by bac on 3/27/26.
 //
-module;
-#include <expected>
-#include <regex>
-#include <stdexcept>
-#include <string>
+import std;
 module domain;
+
 
 import utils;
 import custom_exception;

@@ -5,10 +5,7 @@ module;
 #include <drogon/drogon.h>
 #include <model.h>
 #include <drogon/orm/CoroMapper.h>
-#include <optional>
-#include <ranges>
-#include <string>
-#include <vector>
+import std;
 
 module repo;
 

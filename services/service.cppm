@@ -3,6 +3,7 @@
 //
 
 export module service;
+import std;
 
 export import :admin;
 export import :product;

@@ -2,8 +2,7 @@
 #include <drogon/drogon_test.h>
 #include <drogon/drogon.h>
 #include <glaze/glaze.hpp>
-#include <future>
-#include <string>
+import std;
 
 using namespace drogon;
 

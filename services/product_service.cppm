@@ -5,12 +5,9 @@
 module;
 #include <drogon/drogon.h>
 #include <drogon/HttpTypes.h>
-#include <optional>
-#include <string>
-#include <string_view>
-#include <vector>
-
 export module service:product;
+import std;
+
 
 import dto;
 
@@ -27,19 +24,19 @@ drogon::Task<void> InitializeCache();
 drogon::Task<void> RefreshCache(std::string product_id);
 
 /**
- * @brief Create a new product and update the cache.
+ * @brief Create a new product with associated images and update the cache.
  */
 [[nodiscard]] drogon::Task<dto::ProductResponse> Create(
-    dto::CreateProductRequest request);
+    dto::CreateProductRequest request, std::vector<std::string> new_image_urls);
 
 /**
- * @brief Update an existing product and the cache.
+ * @brief Update an existing product, add/delete images and refresh cache.
  */
 [[nodiscard]] drogon::Task<void> Update(
-    std::string id, dto::UpdateProductRequest request);
+    std::string id, dto::UpdateProductRequest request, std::vector<std::string> new_image_urls);
 
 /**
- * @brief Delete a product and update the cache.
+ * @brief Delete a product and its associated images, then update the cache.
  */
 [[nodiscard]] drogon::Task<void> Delete(std::string id);
 

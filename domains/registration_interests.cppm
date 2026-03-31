@@ -4,8 +4,10 @@
 
 module;
 #include <models/RegistrationInterests.h>
-
 export module domain:registration_interests;
+import std;
+
+
 
 export namespace domain {
 

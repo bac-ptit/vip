@@ -4,8 +4,10 @@
 
 module;
 #include <models/ProjectInfo.h>
-
 export module domain:project_info;
+import std;
+
+
 
 export namespace domain {
 

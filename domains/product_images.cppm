@@ -4,8 +4,10 @@
 
 module;
 #include <models/ProductImages.h>
-
 export module domain:product_images;
+import std;
+
+
 
 export namespace domain {
 

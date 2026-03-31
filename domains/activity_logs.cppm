@@ -4,8 +4,10 @@
 
 module;
 #include <model.h>
-
 export module domain:activity_logs;
+import std;
+
+
 
 export namespace domain {
 

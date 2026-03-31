@@ -1,11 +1,32 @@
+
 #include "api_v1_Product.h"
+#include "plugins/ImgBBPlugin.h"
 #include <glaze/glaze.hpp>
+#include <trantor/utils/Logger.h>
+import std;
 
 using namespace api::v1;
 
 Task<> products::Create(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, dto::CreateProductRequest request) {
   try {
-    auto response{co_await service::product::Create(std::move(request))};
+    // 1. Upload multiple images via ImgBB
+    std::vector<std::string> new_image_urls;
+    MultiPartParser mp;
+    if (mp.parse(req) == 0) {
+        auto* imgbb = drogon::app().getPlugin<custom_plugin::ImgBBPlugin>();
+        for (auto& file : mp.getFiles()) {
+            if (imgbb) {
+                auto content = file.fileContent();
+                auto url = co_await imgbb->UploadImage(utils::base64Encode((const unsigned char*)content.data(), content.size()));
+                new_image_urls.push_back(std::move(url));
+            }
+        }
+    }
+
+    // 2. Call service
+    auto response{co_await service::product::Create(std::move(request), std::move(new_image_urls))};
+    
+    // 3. Response
     auto json{glz::write_json(response)};
     auto resp{HttpResponse::newHttpResponse()};
     resp->setBody(std::move(json).value_or("{}"));
@@ -22,7 +43,22 @@ Task<> products::Create(HttpRequestPtr req, std::function<void(const HttpRespons
 
 Task<> products::Update(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id, dto::UpdateProductRequest request) {
   try {
-    co_await service::product::Update(std::move(id), std::move(request));
+    // 1. Upload new images
+    std::vector<std::string> new_image_urls;
+    MultiPartParser mp;
+    if (mp.parse(req) == 0) {
+        auto* imgbb = drogon::app().getPlugin<custom_plugin::ImgBBPlugin>();
+        for (auto& file : mp.getFiles()) {
+            if (imgbb) {
+                auto content = file.fileContent();
+                auto url = co_await imgbb->UploadImage(utils::base64Encode((const unsigned char*)content.data(), content.size()));
+                new_image_urls.push_back(std::move(url));
+            }
+        }
+    }
+
+    // 2. Call service
+    co_await service::product::Update(std::move(id), std::move(request), std::move(new_image_urls));
     callback(HttpResponse::newHttpResponse());
   } catch (const std::exception& e) {
     auto resp{HttpResponse::newHttpResponse()};

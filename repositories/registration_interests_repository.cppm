@@ -6,12 +6,9 @@ module;
 #include <drogon/drogon.h>
 #include <drogon/orm/CoroMapper.h>
 #include <model.h>
-#include <optional>
-#include <string>
-#include <vector>
-#include <ranges>
-
 export module repo:registration_interests;
+import std;
+
 
 import domain;
 

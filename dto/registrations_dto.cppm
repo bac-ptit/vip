@@ -6,12 +6,10 @@ module;
 #include <drogon/HttpRequest.h>
 #include <drogon/HttpResponse.h>
 #include <glaze/glaze.hpp>
-#include <optional>
-#include <stdexcept>
-#include <string>
-#include <vector>
-
 export module dto:registrations;
+import std;
+
+
 
 export namespace dto {
 

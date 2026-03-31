@@ -5,10 +5,9 @@
 module;
 #include <drogon/drogon.h>
 #include <glaze/glaze.hpp>
-#include <stdexcept>
-#include <string>
-
 export module custom_exception;
+import std;
+
 import dto;
 
 export namespace exception {

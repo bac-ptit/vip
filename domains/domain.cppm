@@ -3,6 +3,8 @@
 //
 
 export module domain;
+import std;
+
 
 export import :admin;
 export import :product;

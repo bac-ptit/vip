@@ -103,7 +103,6 @@ WORKDIR /app
 # Copy các tệp cấu hình và dữ liệu tĩnh
 COPY --from=builder /app/config.yaml .
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/views ./views
 
 # Tạo thư mục bin và copy binary từ stage builder
 RUN mkdir -p /app/bin

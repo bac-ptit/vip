@@ -1,9 +1,7 @@
 #include "AuthFilter.h"
 #include <drogon/drogon.h>
 #include <glaze/glaze.hpp>
-#include <map>
-#include <string>
-#include <vector>
+import std;
 
 using namespace filter;
 

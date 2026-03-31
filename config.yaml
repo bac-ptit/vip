@@ -288,13 +288,14 @@ plugins:
       # show_microseconds: true
       # custom_time_format: ''
       # use_real_ip: false
-
-  # custom_config: custom configuration for users. This object can be get by the app().getCustomConfig() method.
+  - name: custom_plugin::ImgBBPlugin
+    dependencies: [ ]
+    config:
+      api_key: "0303116434295cd80927fb86335e8190"
+      api_url: "https://api.imgbb.com"
 
 # custom_config: custom configuration for users. This object can be get by the app().getCustomConfig() method.
 custom_config: {
   frontendUrl: "*",
-  imgbb_api_key: "YOUR_IMGBB_API_KEY_HERE",
-  imgbb_api_url: "https://api.imgbb.com"
 }
 

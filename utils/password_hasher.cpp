@@ -1,38 +1,41 @@
-//
-// Created by bac on 3/27/26.
-//
 module;
 #include <sodium.h>
-#include <string>
+import std;
 
 module utils;
 
+import :password_hasher;
 
 namespace utils::password_hasher {
 
 std::string HashPassword(std::string_view password) {
-  if (password.empty()) {
-    return "";
-  }
+    if (sodium_init() < 0) {
+        throw std::runtime_error("libsodium initialization failed");
+    }
 
-  std::string hashed_password;
-  hashed_password.resize(crypto_pwhash_STRBYTES);
+    char hashed_password[crypto_pwhash_STRBYTES];
 
-  if (crypto_pwhash_str(hashed_password.data(), password.cbegin(),
-                        password.length(), crypto_pwhash_OPSLIMIT_MODERATE,
-                        crypto_pwhash_MEMLIMIT_MODERATE) != 0) {
-    return {};
-  }
+    if (crypto_pwhash_str(
+            hashed_password,
+            password.data(),
+            password.length(),
+            crypto_pwhash_OPSLIMIT_INTERACTIVE,
+            crypto_pwhash_MEMLIMIT_INTERACTIVE) != 0) {
+        throw std::runtime_error("Password hashing failed");
+    }
 
-  return hashed_password;
+    return std::string(hashed_password);
 }
 
 bool IsValidPassword(const std::string& password, const std::string& hash) {
-  if (password.empty() || hash.empty()) {
-    return false;
-  }
+    if (sodium_init() < 0) {
+        throw std::runtime_error("libsodium initialization failed");
+    }
 
-  return crypto_pwhash_str_verify(hash.c_str(), password.c_str(),
-                                  password.length()) == 0;
+    return crypto_pwhash_str_verify(
+               hash.c_str(),
+               password.c_str(),
+               password.length()) == 0;
 }
-}  // namespace password_hasher
+
+} // namespace utils::password_hasher

@@ -1,6 +1,8 @@
 #define DROGON_TEST_MAIN
 #include <drogon/drogon_test.h>
 #include <drogon/drogon.h>
+import std;
+
 DROGON_TEST(BasicTest)
 {
     // Add your tests here

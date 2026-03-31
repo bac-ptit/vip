@@ -6,12 +6,9 @@ module;
 #include <drogon/HttpRequest.h>
 #include <drogon/HttpResponse.h>
 #include <glaze/glaze.hpp>
-#include <optional>
-#include <stdexcept>
-#include <string>
-#include <vector>
-
 export module dto:product;
+import std;
+
 
 import :product_images;
 
@@ -33,6 +30,7 @@ struct UpdateProductRequest {
   std::optional<std::string> area;
   std::optional<std::string> description;
   std::optional<bool> is_active;
+  std::optional<std::vector<std::string>> image_ids_to_delete;
 };
 
 struct ProductResponse {

@@ -6,11 +6,9 @@ module;
 #include <drogon/drogon.h>
 #include <drogon/orm/CoroMapper.h>
 #include <model.h>
-#include <optional>
-#include <string>
-#include <vector>
-
 export module repo:product_images;
+import std;
+
 
 import domain;
 

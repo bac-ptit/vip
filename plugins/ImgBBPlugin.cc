@@ -1,14 +1,33 @@
 #include "ImgBBPlugin.h"
 #include <drogon/drogon.h>
 #include <glaze/glaze.hpp>
+import std;
 
 using namespace custom_plugin;
 using namespace drogon;
+
+namespace {
+struct ImgBBData {
+  std::string url;
+};
+struct ImgBBResponse {
+  ImgBBData data;
+  bool success;
+};
+}
 
 void ImgBBPlugin::initAndStart(const Json::Value& config) {
   // Lấy API Key và URL từ config plugin hoặc custom config
   api_key_ = config.get("api_key", "").asString();
   api_url_ = config.get("api_url", "https://api.imgbb.com").asString();
+  
+  if (api_key_.empty()) {
+    auto custom_config = app().getCustomConfig();
+    api_key_ = custom_config.get("imgbb_api_key", "").asString();
+    if (api_url_ == "https://api.imgbb.com") {
+        api_url_ = custom_config.get("imgbb_api_url", "https://api.imgbb.com").asString();
+    }
+  }
   
   if (api_key_.empty()) {
     LOG_ERROR << "ImgBB API Key is missing!";

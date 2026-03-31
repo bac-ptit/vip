@@ -1,5 +1,8 @@
 #pragma once
 
+#include <functional>
+#include <string>
+
 #include <drogon/HttpController.h>
 
 import dto;
