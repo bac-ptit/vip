@@ -22,6 +22,11 @@ export namespace service::product {
 drogon::Task<void> InitializeCache();
 
 /**
+ * @brief Refresh cache for a single product.
+ */
+drogon::Task<void> RefreshCache(std::string product_id);
+
+/**
  * @brief Create a new product and update the cache.
  */
 [[nodiscard]] drogon::Task<dto::ProductResponse> Create(
@@ -41,13 +46,13 @@ drogon::Task<void> InitializeCache();
 /**
  * @brief Get product by ID (from cache).
  */
-[[nodiscard]] std::optional<dto::ProductResponse> GetById(
-    std::string id);
+[[nodiscard]] std::optional<std::string> GetByIdJson(
+    std::string_view id);
 
 /**
- * @brief Get all products (from cache).
+ * @brief Get all products (from cache as JSON array string).
  */
-[[nodiscard]] std::vector<dto::ProductResponse> GetAll();
+[[nodiscard]] std::string GetAllJson();
 
 /**
  * @brief Search products in the cache.

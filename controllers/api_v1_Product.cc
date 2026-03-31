@@ -4,46 +4,58 @@
 using namespace api::v1;
 
 Task<> products::Create(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, dto::CreateProductRequest request) {
-  auto response{co_await service::product::Create(std::move(request))};
-  auto json{glz::write_json(response)};
-  auto resp{HttpResponse::newHttpResponse()};
-  resp->setBody(std::move(json).value_or("{}"));
-  resp->setContentTypeCode(CT_APPLICATION_JSON);
-  callback(resp);
+  try {
+    auto response{co_await service::product::Create(std::move(request))};
+    auto json{glz::write_json(response)};
+    auto resp{HttpResponse::newHttpResponse()};
+    resp->setBody(std::move(json).value_or("{}"));
+    resp->setContentTypeCode(CT_APPLICATION_JSON);
+    callback(resp);
+  } catch (const std::exception& e) {
+    auto resp{HttpResponse::newHttpResponse()};
+    resp->setStatusCode(k400BadRequest);
+    resp->setBody(e.what());
+    callback(resp);
+  }
   co_return;
 }
 
 Task<> products::Update(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id, dto::UpdateProductRequest request) {
-  co_await service::product::Update(std::move(id), std::move(request));
-  callback(HttpResponse::newHttpResponse());
+  try {
+    co_await service::product::Update(std::move(id), std::move(request));
+    callback(HttpResponse::newHttpResponse());
+  } catch (const std::exception& e) {
+    auto resp{HttpResponse::newHttpResponse()};
+    resp->setStatusCode(k400BadRequest);
+    resp->setBody(e.what());
+    callback(resp);
+  }
   co_return;
 }
 
 Task<> products::Delete(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id) {
-  co_await service::product::Delete(std::move(id));
+  co_await service::product::Delete(id);
   callback(HttpResponse::newHttpResponse());
   co_return;
 }
 
 Task<> products::GetById(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id) {
-  auto response{service::product::GetById(std::move(id))};
-  if (response) {
-    auto json{glz::write_json(*response)};
+  auto json_opt{service::product::GetByIdJson(id)};
+  if (json_opt) {
     auto resp{HttpResponse::newHttpResponse()};
-    resp->setBody(std::move(json).value_or("{}"));
+    resp->setBody(std::move(*json_opt));
     resp->setContentTypeCode(CT_APPLICATION_JSON);
     callback(resp);
-    co_return;
+  } else {
+    callback(HttpResponse::newNotFoundResponse());
   }
-  callback(HttpResponse::newNotFoundResponse());
   co_return;
 }
 
 Task<> products::GetAll(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback) {
-  auto response{service::product::GetAll()};
-  auto json{glz::write_json(response)};
+  auto json{service::product::GetAllJson()};
   auto resp{HttpResponse::newHttpResponse()};
-  resp->setBody(std::move(json).value_or("{}"));
+  resp->setBody(std::move(json));
   resp->setContentTypeCode(CT_APPLICATION_JSON);
   callback(resp);
   co_return;
@@ -51,19 +63,15 @@ Task<> products::GetAll(HttpRequestPtr req, std::function<void(const HttpRespons
 
 Task<> products::Search(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback) {
   dto::ProductSearchQuery query;
-  auto name{req->getParameter("name")};
-  if (!name.empty()) query.name = name;
-  auto type{req->getParameter("type")};
-  if (!type.empty()) query.type = type;
-  auto min_price{req->getParameter("min_price")};
-  if (!min_price.empty()) query.min_price = min_price;
-  auto max_price{req->getParameter("max_price")};
-  if (!max_price.empty()) query.max_price = max_price;
+  query.name = req->getParameter("name");
+  query.type = req->getParameter("type");
+  query.min_price = req->getParameter("min_price");
+  query.max_price = req->getParameter("max_price");
 
-  auto response{service::product::Search(query)};
+  auto response{service::product::Search(std::move(query))};
   auto json{glz::write_json(response)};
   auto resp{HttpResponse::newHttpResponse()};
-  resp->setBody(std::move(json).value_or("{}"));
+  resp->setBody(std::move(json).value_or("[]"));
   resp->setContentTypeCode(CT_APPLICATION_JSON);
   callback(resp);
   co_return;

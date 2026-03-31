@@ -13,6 +13,8 @@ module;
 
 export module dto:product;
 
+import :product_images;
+
 export namespace dto {
 
 struct CreateProductRequest {
@@ -43,6 +45,7 @@ struct ProductResponse {
   std::shared_ptr<bool> is_active;
   std::shared_ptr<trantor::Date> created_at;
   std::shared_ptr<trantor::Date> updated_at;
+  std::vector<ProductImageResponse> images;
 };
 
 struct ProductSearchQuery {

@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 
+
 add_executable(${PROJECT_NAME} main.cc)
 
 # ##############################################################################
@@ -59,7 +60,8 @@ target_sources(${PROJECT_NAME}
 ${UTILS_SRC}
 ${REPO_SRC}
 ${SERVICE_SRC}
-${DTO_SRC})
+${DTO_SRC}
+plugins/ImgBBPlugin.cc)
 
 target_sources(${PROJECT_NAME}
         PUBLIC

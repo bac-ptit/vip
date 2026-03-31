@@ -5,16 +5,16 @@ FROM fedora:43 AS builder
 RUN echo "max_parallel_downloads=10" >> /etc/dnf/dnf.conf && \
     echo "fastestmirror=True" >> /etc/dnf/dnf.conf
 
-# Cài đặt công cụ build và dependencies của Drogon
+# Cài đặt công cụ build và dependencies của Drogon (Loại bỏ cmake của Fedora)
 RUN --mount=type=cache,target=/var/cache/dnf \
     dnf install -y \
     clang \
     gcc \
     gcc-c++ \
-    cmake \
     ninja-build \
     git \
     curl \
+    wget \
     zip \
     unzip \
     tar \
@@ -37,6 +37,13 @@ RUN --mount=type=cache,target=/var/cache/dnf \
     perl-core \
     make \
     && dnf clean all
+
+# --- CÀI ĐẶT CMAKE 4.2.1 TỪ KITWARE ---
+WORKDIR /tmp
+RUN wget https://github.com/Kitware/CMake/releases/download/v4.2.1/cmake-4.2.1-linux-x86_64.sh && \
+    chmod +x cmake-4.2.1-linux-x86_64.sh && \
+    ./cmake-4.2.1-linux-x86_64.sh --skip-license --prefix=/usr/local && \
+    rm cmake-4.2.1-linux-x86_64.sh
 
 # Thiết lập Compiler là Clang (Quan trọng để build C++20/26 Modules)
 ENV CC=clang
@@ -104,6 +111,6 @@ COPY --from=builder /app/build/vip /app/bin/vip
 
 EXPOSE 5555
 
-# Chạy từ /app/bin để binary load config từ "../config.yaml"
+# Chuyển vào thư mục bin và chạy để code load "../config.yaml" chính xác
 WORKDIR /app/bin
 CMD ["./vip"]

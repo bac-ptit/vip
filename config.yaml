@@ -293,6 +293,8 @@ plugins:
 
 # custom_config: custom configuration for users. This object can be get by the app().getCustomConfig() method.
 custom_config: {
-  frontendUrl: "*"
+  frontendUrl: "*",
+  imgbb_api_key: "YOUR_IMGBB_API_KEY_HERE",
+  imgbb_api_url: "https://api.imgbb.com"
 }
 
