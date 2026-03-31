@@ -2,7 +2,6 @@
 // Created by bac on 3/27/26.
 //
 
-module;
 #include <drogon/HttpTypes.h>
 #include <models/RegistrationInterests.h>
 #include <models/Registrations.h>
@@ -10,12 +9,10 @@ module;
 #include <string>
 #include <string_view>
 #include <vector>
-
-module service;
-
-import dto;
-import repo;
-import domain;
+#include "services/registrations_service.h"
+#include "dto/dto.h"
+#include "repositories/repo.h"
+#include "domains/domain.h"
 
 namespace service::registrations {
 

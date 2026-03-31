@@ -1,7 +1,6 @@
 //
 // Created by bac on 3/27/26.
 //
-module;
 #include <drogon/drogon.h>
 #include <model.h>
 #include <drogon/orm/CoroMapper.h>
@@ -9,10 +8,8 @@ module;
 #include <ranges>
 #include <string>
 #include <vector>
-
-module repo;
-
-import domain;
+#include "repositories/admin_repository.h"
+#include "domains/domain.h"
 
 using namespace drogon;
 using namespace drogon::orm;

@@ -2,19 +2,16 @@
 // Created by bac on 3/27/26.
 //
 
-module;
 #include <drogon/HttpTypes.h>
 #include <models/RegistrationInterests.h>
 #include <optional>
 #include <string>
 #include <vector>
 #include <ranges>
-
-module service;
-
-import dto;
-import repo;
-import domain;
+#include "services/registration_interests_service.h"
+#include "dto/dto.h"
+#include "repositories/repo.h"
+#include "domains/domain.h"
 
 namespace service::registration_interests {
 

@@ -1,7 +1,6 @@
 //
 // Created by bac on 3/27/26.
 //
-module;
 #include <drogon/drogon.h>
 #include <models/Admins.h>
 #include <atomic>
@@ -10,12 +9,10 @@ module;
 #include <string>
 #include <string_view>
 #include <vector>
-
-module service;
-
-import domain;
-import repo;
-import dto;
+#include "services/admin_service.h"
+#include "domains/domain.h"
+#include "repositories/repo.h"
+#include "dto/dto.h"
 
 using namespace drogon;
 

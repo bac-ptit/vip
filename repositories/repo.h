@@ -1,0 +1,12 @@
+#pragma once
+#include "repositories/admin_repository.h"
+#include "repositories/product_repository.h"
+#include "repositories/project_info_repository.h"
+#include "repositories/media_repository.h"
+#include "repositories/product_images_repository.h"
+#include "repositories/floor_plans_repository.h"
+#include "repositories/registrations_repository.h"
+#include "repositories/registration_interests_repository.h"
+#include "repositories/site_settings_repository.h"
+#include "repositories/admin_sessions_repository.h"
+#include "repositories/activity_logs_repository.h"
