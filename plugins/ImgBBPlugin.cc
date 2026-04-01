@@ -1,7 +1,9 @@
+#include <stdexcept>
+#include <string>
 #include "ImgBBPlugin.h"
 #include <drogon/drogon.h>
 #include <glaze/glaze.hpp>
-import std;
+
 
 using namespace custom_plugin;
 using namespace drogon;
@@ -12,7 +14,7 @@ struct ImgBBData {
 };
 struct ImgBBResponse {
   ImgBBData data;
-  bool success;
+  bool success{false};
 };
 }
 
@@ -22,7 +24,7 @@ void ImgBBPlugin::initAndStart(const Json::Value& config) {
   api_url_ = config.get("api_url", "https://api.imgbb.com").asString();
   
   if (api_key_.empty()) {
-    auto custom_config = app().getCustomConfig();
+    auto custom_config{app().getCustomConfig()};
     api_key_ = custom_config.get("imgbb_api_key", "").asString();
     if (api_url_ == "https://api.imgbb.com") {
         api_url_ = custom_config.get("imgbb_api_url", "https://api.imgbb.com").asString();
@@ -47,7 +49,7 @@ Task<std::string> ImgBBPlugin::UploadImage(std::string base64_data) {
     throw std::runtime_error("ImgBBPlugin is not properly configured.");
   }
 
-  auto req = HttpRequest::newHttpRequest();
+  auto req{HttpRequest::newHttpRequest()};
   req->setMethod(drogon::Post);
   req->setPath("/1/upload");
   req->setContentTypeCode(CT_APPLICATION_X_FORM);
@@ -56,7 +58,7 @@ Task<std::string> ImgBBPlugin::UploadImage(std::string base64_data) {
   req->setParameter("image", base64_data);
 
   try {
-    auto resp = co_await client_->sendRequestCoro(req);
+    auto resp{co_await client_->sendRequestCoro(req)};
     
     if (resp->getStatusCode() != k200OK) {
       LOG_ERROR << "ImgBB API Error: " << resp->body();
@@ -64,7 +66,7 @@ Task<std::string> ImgBBPlugin::UploadImage(std::string base64_data) {
     }
 
     ImgBBResponse res;
-    auto error_code = glz::read_json(res, resp->body());
+    auto error_code{glz::read_json(res, resp->body())};
     if (error_code) {
       throw std::runtime_error("Failed to parse ImgBB response.");
     }

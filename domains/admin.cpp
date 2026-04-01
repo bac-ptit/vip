@@ -1,12 +1,18 @@
+#include <utility>
+#include <stdexcept>
+#include <regex>
+#include <string_view>
+#include <string>
+#include <expected>
+#include "admin.h"
 //
 // Created by bac on 3/27/26.
 //
-import std;
-module domain;
 
 
-import utils;
-import custom_exception;
+
+#include <utils/utils.h>
+#include <exception/custom_exception.h>
 
 void domain::Admin::SetPassword(std::string_view password) {
   auto verified_new_password{ValidateNewPassword(password)};

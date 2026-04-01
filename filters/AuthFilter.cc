@@ -1,35 +1,29 @@
+#include <drogon/HttpFilter.h>
+#include <drogon/HttpTypes.h>
+#include <drogon/Session.h>
 #include "AuthFilter.h"
-#include <drogon/drogon.h>
-#include <glaze/glaze.hpp>
-import std;
 
 using namespace filter;
+using namespace drogon;
 
-AuthFilter::AuthFilter() {}
+AuthFilter::AuthFilter() = default;
 
 void AuthFilter::doFilter(const HttpRequestPtr& req,
-                          FilterCallback&& fcb,
-                          FilterChainCallback&& fccb) {
-  // 1. Kiểm tra trong Session (Drogon builtin)
+                         FilterCallback&& callback,
+                         FilterChainCallback&& filter_chain_callback) {
   auto session{req->session()};
   if (session && (session->find("admin_id") || session->find("user_id"))) {
-    fccb();
+    std::move(filter_chain_callback)();
     return;
   }
 
-  // 2. Kiểm tra trong Header (Custom X-Admin-Id)
-  auto& admin_id_header{req->getHeader("X-Admin-Id")};
+  const auto& admin_id_header{req->getHeader("X-Admin-Id")};
   if (!admin_id_header.empty()) {
-    fccb();
+    std::move(filter_chain_callback)();
     return;
   }
 
-  // Unauthorized - Use Glaze for performance
-  std::string json_str;
-  (void)glz::write_json(std::map<std::string, std::string>{{"error", "Unauthorized: Please login"}}, json_str);
   auto resp{HttpResponse::newHttpResponse()};
-  resp->setBody(std::move(json_str));
   resp->setStatusCode(k401Unauthorized);
-  resp->setContentTypeCode(CT_APPLICATION_JSON);
-  fcb(resp);
+  std::move(callback)(resp);
 }

@@ -1,109 +1,60 @@
-
 #include "api_v1_Media.h"
 #include <glaze/glaze.hpp>
-import std;
 
 using namespace api::v1;
 
 Task<> media::Create(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, dto::CreateMediaRequest request) {
-  try {
-    std::optional<std::string> admin_id;
-    if (auto session{req->session()}) {
-      admin_id = session->getOptional<std::string>("admin_id");
-    }
+    auto response_dto{co_await service::media::Create(std::move(request), std::nullopt)};
     
-    auto response{co_await service::media::Create(std::move(request), std::move(admin_id))};
-    auto json{glz::write_json(response)};
     auto resp{HttpResponse::newHttpResponse()};
-    resp->setBody(std::move(json).value_or("{}"));
+    resp->setStatusCode(k201Created);
+    resp->setBody(glz::write_json(response_dto).value_or("{}"));
     resp->setContentTypeCode(CT_APPLICATION_JSON);
     callback(resp);
-  } catch (const std::exception& e) {
-    auto resp{HttpResponse::newHttpResponse()};
-    resp->setStatusCode(k400BadRequest);
-    resp->setBody(e.what());
-    callback(resp);
-  }
-  co_return;
 }
 
-Task<> media::Update(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id, dto::UpdateMediaRequest request) {
-  try {
-    co_await service::media::Update(std::move(id), std::move(request));
-    callback(HttpResponse::newHttpResponse());
-  } catch (const std::exception& e) {
+Task<> media::Update(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string media_id, dto::UpdateMediaRequest request) {
+    co_await service::media::Update(std::move(media_id), std::move(request));
+    
     auto resp{HttpResponse::newHttpResponse()};
-    resp->setStatusCode(k400BadRequest);
-    resp->setBody(e.what());
+    resp->setStatusCode(k204NoContent);
     callback(resp);
-  }
-  co_return;
 }
 
-Task<> media::Delete(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id) {
-  try {
-    co_await service::media::Delete(std::move(id));
-    callback(HttpResponse::newHttpResponse());
-  } catch (const std::exception& e) {
+Task<> media::Delete(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string media_id) {
+    co_await service::media::Delete(std::move(media_id));
+    
     auto resp{HttpResponse::newHttpResponse()};
-    resp->setStatusCode(k400BadRequest);
-    resp->setBody(e.what());
+    resp->setStatusCode(k204NoContent);
     callback(resp);
-  }
-  co_return;
 }
 
-Task<> media::GetById(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id) {
-  try {
-    auto response{co_await service::media::GetById(std::move(id))};
-    if (response) {
-      auto json{glz::write_json(*response)};
-      auto resp{HttpResponse::newHttpResponse()};
-      resp->setBody(std::move(json).value_or("{}"));
-      resp->setContentTypeCode(CT_APPLICATION_JSON);
-      callback(resp);
-      co_return;
-    }
+Task<> media::GetById(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string media_id) {
+  auto response_dto{co_await service::media::GetById(std::move(media_id))};
+  if (response_dto) {
+    auto resp{HttpResponse::newHttpResponse()};
+    resp->setBody(glz::write_json(*response_dto).value_or("{}"));
+    resp->setContentTypeCode(CT_APPLICATION_JSON);
+    callback(resp);
+  } else {
     callback(HttpResponse::newNotFoundResponse());
-  } catch (const std::exception& e) {
-    auto resp{HttpResponse::newHttpResponse()};
-    resp->setStatusCode(k400BadRequest);
-    resp->setBody(e.what());
-    callback(resp);
   }
-  co_return;
 }
 
 Task<> media::GetAll(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback) {
-  try {
-    auto response{co_await service::media::GetAll()};
-    auto json{glz::write_json(response)};
+    auto list{co_await service::media::GetAll()};
+    
     auto resp{HttpResponse::newHttpResponse()};
-    resp->setBody(std::move(json).value_or("{}"));
+    resp->setBody(glz::write_json(list).value_or("[]"));
     resp->setContentTypeCode(CT_APPLICATION_JSON);
     callback(resp);
-  } catch (const std::exception& e) {
-    auto resp{HttpResponse::newHttpResponse()};
-    resp->setStatusCode(k400BadRequest);
-    resp->setBody(e.what());
-    callback(resp);
-  }
-  co_return;
 }
 
 Task<> media::GetActive(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback) {
-  try {
-    auto response{co_await service::media::GetActiveMedia()};
-    auto json{glz::write_json(response)};
+    auto list{co_await service::media::GetActiveMedia()};
+    
     auto resp{HttpResponse::newHttpResponse()};
-    resp->setBody(std::move(json).value_or("{}"));
+    resp->setBody(glz::write_json(list).value_or("[]"));
     resp->setContentTypeCode(CT_APPLICATION_JSON);
     callback(resp);
-  } catch (const std::exception& e) {
-    auto resp{HttpResponse::newHttpResponse()};
-    resp->setStatusCode(k400BadRequest);
-    resp->setBody(e.what());
-    callback(resp);
-  }
-  co_return;
 }

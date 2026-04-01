@@ -1,18 +1,21 @@
-//
-// Created by bac on 3/27/26.
-//
-module;
+#include <utility>
+#include <stdexcept>
+#include <vector>
+#include <optional>
+#include <string>
+#include <ranges>
+#include "admin_service.h"
+
 #include <drogon/drogon.h>
 #include <models/Admins.h>
-import std;
 
-module service;
-
-import domain;
-import repo;
-import dto;
+#include <domains/domain.h>
+#include <repositories/repo.h>
+#include <dto/dto.h>
 
 using namespace drogon;
+
+namespace service::admin {
 
 // Helper function to get one of the last 2 threads for CPU-intensive auth operations
 static trantor::EventLoop* GetNextAuthLoop() noexcept {
@@ -41,7 +44,7 @@ static dto::AdminResponse ToAdminResponse(const domain::Admin& admin) {
   return response;
 }
 
-drogon::Task<dto::AdminResponse> service::admin::Register(
+drogon::Task<dto::AdminResponse> Register(
     dto::RegisterAdminRequest request) {
   // Check if username is already taken
   auto exists{co_await repo::admin::ExistsByUsername(request.username)};
@@ -64,17 +67,17 @@ drogon::Task<dto::AdminResponse> service::admin::Register(
   co_return ToAdminResponse(created);
 }
 
-drogon::Task<std::optional<dto::AdminResponse>> service::admin::Login(
+drogon::Task<std::optional<dto::AdminResponse>> Login(
     dto::LoginRequest request) {
   // Find admin by username
   auto password{std::move(request.password)};
-  auto admin{co_await repo::admin::FindByUsername(request.username)};
-  if (!admin) {
+  auto admin_opt{co_await repo::admin::FindByUsername(request.username)};
+  if (!admin_opt) {
     co_return std::nullopt;
   }
 
   // Check if admin is active
-  if (!admin->getValueOfIsActive()) {
+  if (!admin_opt->getValueOfIsActive()) {
     throw std::runtime_error("Account is deactivated");
   }
 
@@ -82,96 +85,96 @@ drogon::Task<std::optional<dto::AdminResponse>> service::admin::Login(
   co_await drogon::switchThreadCoro(GetNextAuthLoop());
 
   // Verify password using domain method
-  if (!admin->VerifyPassword(password)) {
+  if (!admin_opt->VerifyPassword(password)) {
     co_return std::nullopt;
   }
 
-  co_return ToAdminResponse(*admin);
+  co_return ToAdminResponse(*admin_opt);
 }
 
-drogon::Task<void> service::admin::UpdateProfile(
-    std::string id, dto::UpdateProfileRequest request) {
+drogon::Task<void> UpdateProfile(
+    std::string admin_id, dto::UpdateProfileRequest request) {
   // Get existing admin
-  auto admin{co_await repo::admin::FindById(id)};
-  if (!admin) {
+  auto admin_opt{co_await repo::admin::FindById(admin_id)};
+  if (!admin_opt) {
     throw std::runtime_error("Admin not found");
   }
 
   // Update username if provided
   if (request.username) {
     // Check if new username is taken by another admin
-    auto existing{co_await repo::admin::FindByUsername(*request.username)};
-    if (existing && existing->getValueOfId() != id) {
+    auto existing_opt{co_await repo::admin::FindByUsername(*request.username)};
+    if (existing_opt && existing_opt->getValueOfId() != admin_id) {
       throw std::runtime_error("Username already exists");
     }
-    admin->SetUsername(std::move(*request.username));
+    admin_opt->SetUsername(std::move(*request.username));
   }
 
   // Update full name if provided
   if (request.full_name) {
-    admin->SetFullName(std::move(*request.full_name));
+    admin_opt->SetFullName(std::move(*request.full_name));
   }
 
   // Update in database
-  co_await repo::admin::Update(*admin);
+  co_await repo::admin::Update(*admin_opt);
 }
 
-drogon::Task<void> service::admin::ChangePassword(
-    std::string id, dto::ChangePasswordRequest request) {
+drogon::Task<void> ChangePassword(
+    std::string admin_id, dto::ChangePasswordRequest request) {
   // Get existing admin
-  auto admin{co_await repo::admin::FindById(id)};
-  if (!admin) {
+  auto admin_opt{co_await repo::admin::FindById(admin_id)};
+  if (!admin_opt) {
     throw std::runtime_error("Admin not found");
   }
 
   // Verify old password using domain method
-  if (!admin->VerifyPassword(request.old_password)) {
+  if (!admin_opt->VerifyPassword(request.old_password)) {
     throw std::runtime_error("Current password is incorrect");
   }
 
   // Set new password (will validate and hash) - password needs copy for hashing
-  admin->SetPassword(request.new_password);
+  admin_opt->SetPassword(request.new_password);
 
   // Update in database
-  co_await repo::admin::Update(*admin);
+  co_await repo::admin::Update(*admin_opt);
 }
 
-drogon::Task<void> service::admin::Deactivate(std::string id) {
-  auto success{co_await repo::admin::SoftDeleteById(std::move(id))};
+drogon::Task<void> Deactivate(std::string admin_id) {
+  auto success{co_await repo::admin::SoftDeleteById(std::move(admin_id))};
   if (!success) {
     throw std::runtime_error("Admin not found");
   }
 }
 
-drogon::Task<void> service::admin::Activate(std::string id) {
-  auto admin{co_await repo::admin::FindById(id)};
-  if (!admin) {
+drogon::Task<void> Activate(std::string admin_id) {
+  auto admin_opt{co_await repo::admin::FindById(admin_id)};
+  if (!admin_opt) {
     throw std::runtime_error("Admin not found");
   }
 
-  admin->setIsActive(true);
-  co_await repo::admin::Update(*admin);
+  admin_opt->setIsActive(true);
+  co_await repo::admin::Update(*admin_opt);
 }
 
-drogon::Task<std::optional<dto::AdminResponse>> service::admin::GetById(
-    std::string id) {
-  auto admin{co_await repo::admin::FindById(std::move(id))};
-  if (!admin) {
+drogon::Task<std::optional<dto::AdminResponse>> GetById(
+    std::string admin_id) {
+  auto admin_opt{co_await repo::admin::FindById(std::move(admin_id))};
+  if (!admin_opt) {
     co_return std::nullopt;
   }
-  co_return ToAdminResponse(*admin);
+  co_return ToAdminResponse(*admin_opt);
 }
 
-drogon::Task<std::optional<dto::AdminResponse>> service::admin::GetByUsername(
+drogon::Task<std::optional<dto::AdminResponse>> GetByUsername(
     std::string username) {
-  auto admin{co_await repo::admin::FindByUsername(std::move(username))};
-  if (!admin) {
+  auto admin_opt{co_await repo::admin::FindByUsername(std::move(username))};
+  if (!admin_opt) {
     co_return std::nullopt;
   }
-  co_return ToAdminResponse(*admin);
+  co_return ToAdminResponse(*admin_opt);
 }
 
-drogon::Task<std::vector<dto::AdminResponse>> service::admin::GetAll() {
+drogon::Task<std::vector<dto::AdminResponse>> GetAll() {
   auto admins{co_await repo::admin::FindAll()};
   std::vector<dto::AdminResponse> responses;
   responses.reserve(admins.size());
@@ -181,7 +184,7 @@ drogon::Task<std::vector<dto::AdminResponse>> service::admin::GetAll() {
   co_return responses;
 }
 
-drogon::Task<std::vector<dto::AdminResponse>> service::admin::GetActiveAdmins() {
+drogon::Task<std::vector<dto::AdminResponse>> GetActiveAdmins() {
   auto admins{co_await repo::admin::FindActiveAdmins()};
   std::vector<dto::AdminResponse> responses;
   responses.reserve(admins.size());
@@ -191,8 +194,10 @@ drogon::Task<std::vector<dto::AdminResponse>> service::admin::GetActiveAdmins() 
   co_return responses;
 }
 
-drogon::Task<bool> service::admin::IsUsernameAvailable(
+drogon::Task<bool> IsUsernameAvailable(
     std::string username) {
   auto exists{co_await repo::admin::ExistsByUsername(std::move(username))};
   co_return !exists;
 }
+
+}  // namespace service::admin

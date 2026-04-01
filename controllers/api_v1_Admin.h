@@ -1,12 +1,13 @@
 #pragma once
+#include <string>
 
 #include <functional>
 #include <string>
 
 #include <drogon/HttpController.h>
 
-import dto;
-import service;
+#include "dto/dto.h"
+#include "services/service.h"
 
 using namespace drogon;
 
@@ -28,14 +29,14 @@ class admin : public drogon::HttpController<admin> {
   
   METHOD_LIST_END
 
-  Task<> GetById(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id);
+  Task<> GetById(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string admin_id);
   Task<> GetByUsername(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string username);
   Task<> GetAll(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback);
   Task<> GetActiveAdmins(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback);
-  Task<> UpdateProfile(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id, dto::UpdateProfileRequest request);
-  Task<> ChangePassword(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id, dto::ChangePasswordRequest request);
-  Task<> Deactivate(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id);
-  Task<> Activate(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id);
+  Task<> UpdateProfile(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string admin_id, dto::UpdateProfileRequest request);
+  Task<> ChangePassword(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string admin_id, dto::ChangePasswordRequest request);
+  Task<> Deactivate(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string admin_id);
+  Task<> Activate(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string admin_id);
   Task<> CheckUsername(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string username);
 };
 

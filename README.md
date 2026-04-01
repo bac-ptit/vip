@@ -6,13 +6,13 @@
 
 ## 🚀 Overview
 
-The **VIP Backend** is a cutting-edge, high-concurrency system designed for premium real estate management. Built with **C++26**, it leverages modern paradigms such as **Coroutines** and **C++20 Modules** to deliver exceptional throughput and minimal latency.
+The **VIP Backend** is a cutting-edge, high-concurrency system designed for premium real estate management. Built with **C++26**, it leverages modern paradigms such as **Coroutines** to deliver exceptional throughput and minimal latency.
 
-Originally designed with Google Cloud Storage (GCS) integration, the system has been refactored to use **ImgBB** via a custom-built asynchronous plugin. This transition significantly reduces overhead while maintaining high reliability for image assets.
+> **Note on Architecture**: While the project was initially intended to use **C++20 Modules**, the implementation has been transitioned back to **Traditional Headers**. This decision was made to optimize memory consumption during the build process, as C++ Module compilation proved to be excessively memory-intensive for the current infrastructure.
 
 ## ✨ Core Technical Highlights
 
-*   **Modern C++26 Stack**: Fully utilizes C++20 Modules for strict encapsulation and faster compilation, alongside Coroutines for non-blocking I/O.
+*   **Modern C++26 Stack**: Fully utilizes **Coroutines** for non-blocking I/O and modern language features for performance and safety.
 *   **Extreme Cache Performance**: Implements a high-performance in-memory cache strategy. Responses for critical entities (like `Products`) are stored as **pre-serialized JSON strings** using [Glaze](https://github.com/stephenberry/glaze), bypassing redundant serialization cycles during request handling.
 *   **Reactive Image Handling**: Integrated `ImgBBPlugin` using `drogon::HttpClient` for seamless, non-blocking image uploads.
 *   **Layered Architecture**: Strictly follows the **Controller → Service → Repository → Domain → DTO** pattern, ensuring clean separation of concerns and robust maintainability.
@@ -47,7 +47,7 @@ docker-compose up --build -d
 ```
 
 ### Build Optimization
-The project utilizes **CMake Presets** and a custom **vcpkg triplet** (`x64-linux-release`) to enforce release-only builds, drastically reducing image size and build times.
+The project utilizes **CMake Presets**, **Ninja** build system, and a custom **vcpkg triplet** (`x64-linux-release`) to enforce release-only builds, drastically reducing image size and build times.
 
 ## 📖 API Documentation
 
@@ -56,8 +56,9 @@ Comprehensive API specifications are available via OpenAPI 3.0. Once the server 
 
 ## 🏗 Coding Standards
 
-*   **Google C++ Style Guide**: Adheres to naming conventions (`snake_case`, `trailing_underscore_`) and formatting rules.
-*   **Safety First**: Extensive use of `ms-gsl` (Guidelines Support Library) concepts and C++ attributes (`[[nodiscard]]`, `[[maybe_unused]]`) for robust code.
+*   **Google C++ Style Guide**: Adheres to naming conventions (`snake_case`) and formatting rules.
+*   **Modern Initialization**: Extensive use of **Brace Initialization** (`{}`) consistently across the codebase for safer and predictable object creation.
+*   **Safety First**: Extensive use of C++ attributes (`[[nodiscard]]`, `[[maybe_unused]]`) for robust code.
 *   **Async Everything**: All service and repository layers are designed with `drogon::Task<T>` to maximize CPU utilization.
 
 ---

@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 #include <drogon/plugins/Plugin.h>
 #include <drogon/drogon.h>

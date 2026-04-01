@@ -1,12 +1,13 @@
 #pragma once
+#include <string>
 
 #include <functional>
 #include <string>
 
 #include <drogon/HttpController.h>
 
-import dto;
-import service;
+#include "dto/dto.h"
+#include "services/service.h"
 
 using namespace drogon;
 
@@ -26,9 +27,9 @@ class floorplans : public drogon::HttpController<floorplans> {
   METHOD_LIST_END
 
   Task<> Create(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, dto::CreateFloorPlanRequest request);
-  Task<> Update(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id, dto::UpdateFloorPlanRequest request);
-  Task<> Delete(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id);
-  Task<> GetById(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id);
+  Task<> Update(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string floor_plan_id, dto::UpdateFloorPlanRequest request);
+  Task<> Delete(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string floor_plan_id);
+  Task<> GetById(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string floor_plan_id);
   Task<> GetAll(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback);
   Task<> GetActive(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback);
 };

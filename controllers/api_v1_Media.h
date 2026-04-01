@@ -1,12 +1,13 @@
 #pragma once
+#include <string>
 
 #include <functional>
 #include <string>
 
 #include <drogon/HttpController.h>
 
-import dto;
-import service;
+#include "dto/dto.h"
+#include "services/service.h"
 
 using namespace drogon;
 
@@ -26,9 +27,9 @@ class media : public drogon::HttpController<media> {
   METHOD_LIST_END
 
   [[nodiscard]] Task<> Create(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, dto::CreateMediaRequest request);
-  [[nodiscard]] Task<> Update(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id, dto::UpdateMediaRequest request);
-  [[nodiscard]] Task<> Delete(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id);
-  [[nodiscard]] Task<> GetById(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id);
+  [[nodiscard]] Task<> Update(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string media_id, dto::UpdateMediaRequest request);
+  [[nodiscard]] Task<> Delete(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string media_id);
+  [[nodiscard]] Task<> GetById(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string media_id);
   [[nodiscard]] Task<> GetAll(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback);
   [[nodiscard]] Task<> GetActive(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback);
 };

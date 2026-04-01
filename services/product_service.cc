@@ -1,16 +1,19 @@
-//
-// Created by bac on 3/27/26.
-//
-module;
+#include <utility>
+#include <stdexcept>
+#include <vector>
+#include <optional>
+#include <string_view>
+#include <string>
+#include <ranges>
+#include "product_service.h"
+
+#include <shared_mutex>
 #include <drogon/drogon.h>
 #include <glaze/glaze.hpp>
-import std;
 
-module service;
-
-import repo;
-import dto;
-import domain;
+#include <repositories/repo.h>
+#include <dto/dto.h>
+#include <domains/domain.h>
 
 using namespace drogon;
 
@@ -25,30 +28,19 @@ std::shared_mutex cache_mutex;
  * @brief Helper to convert domain to DTO. 
  * Includes images fetched from repository.
  */
-[[nodiscard]] dto::ProductResponse ToProductResponse(const domain::Product& p, const std::vector<dto::ProductImageResponse>& images) {
-  dto::ProductResponse resp;
-  resp.id = p.getId();
-  resp.type = p.getType();
-  resp.name = p.getName();
-  resp.price = p.getPrice();
-  resp.area = p.getArea();
-  resp.description = p.getDescription();
-  resp.is_active = p.getIsActive();
-  resp.created_at = p.getCreatedAt();
-  resp.updated_at = p.getUpdatedAt();
-  resp.images = images;
-  return resp;
-}
-
-/**
- * @brief Rebuilds the global JSON array cache.
- * Called whenever individual product cache changes.
- */
-void RebuildGlobalCache() {
-  std::vector<std::string_view> active_json_views;
-  // We need to actually parse back to list or maintain a list of DTOs to rebuild
-  // Alternatively, just concatenate strings with commas if we want to stay string-only
-  // but simpler to just keep a list of DTOs for rebuilding the big one.
+[[nodiscard]] dto::ProductResponse ToProductResponse(const domain::Product& product, const std::vector<dto::ProductImageResponse>& images) {
+  dto::ProductResponse response;
+  response.id = product.getId();
+  response.type = product.getType();
+  response.name = product.getName();
+  response.price = product.getPrice();
+  response.area = product.getArea();
+  response.description = product.getDescription();
+  response.is_active = product.getIsActive();
+  response.created_at = product.getCreatedAt();
+  response.updated_at = product.getUpdatedAt();
+  response.images = images;
+  return response;
 }
 }
 
@@ -57,13 +49,13 @@ namespace {
 std::unordered_map<std::string, dto::ProductResponse> product_dto_cache;
 
 void RebuildAllJson() {
-  auto active_products = product_dto_cache | std::views::values 
-                         | std::views::filter([](const auto& p){ return p.is_active && *p.is_active; });
+  auto active_products{product_dto_cache | std::views::values 
+                         | std::views::filter([](const auto& product){ return product.is_active && *product.is_active; })};
   
   std::vector<dto::ProductResponse> vec;
   std::ranges::copy(active_products, std::back_inserter(vec));
   
-  auto json {glz::write_json(vec)};
+  auto json{glz::write_json(vec)};
   all_products_json_cache = std::move(json).value_or("[]");
 }
 }
@@ -76,29 +68,29 @@ drogon::Task<void> service::product::InitializeCache() {
   product_cache_json.clear();
   product_dto_cache.clear();
 
-  for (auto&& p_domain : products_raw) {
-    const std::string id = *p_domain.getId();
-    auto images = co_await repo::product_images::FindByProductId(id);
+  for (auto& product_domain : products_raw) {
+    const std::string product_id{*product_domain.getId()};
+    auto images{co_await repo::product_images::FindByProductId(product_id)};
     
     // Convert to DTO
     std::vector<dto::ProductImageResponse> img_dtos;
-    for(const auto& img : images) {
+    for(const auto& image : images) {
         dto::ProductImageResponse ir;
-        ir.id = img.getId();
-        ir.product_id = img.getProductId();
-        ir.url = img.getUrl();
-        ir.is_cover = img.getIsCover();
-        ir.sort_order = img.getSortOrder();
-        ir.uploaded_by = img.getUploadedBy();
-        ir.created_at = img.getCreatedAt();
+        ir.id = image.getId();
+        ir.product_id = image.getProductId();
+        ir.url = image.getUrl();
+        ir.is_cover = image.getIsCover();
+        ir.sort_order = image.getSortOrder();
+        ir.uploaded_by = image.getUploadedBy();
+        ir.created_at = image.getCreatedAt();
         img_dtos.push_back(std::move(ir));
     }
 
-    auto resp = ToProductResponse(p_domain, img_dtos);
-    auto json = glz::write_json(resp);
+    auto response{ToProductResponse(product_domain, img_dtos)};
+    auto json{glz::write_json(response)};
     
-    product_cache_json[id] = std::move(json).value_or("{}");
-    product_dto_cache[id] = std::move(resp);
+    product_cache_json[product_id] = std::move(json).value_or("{}");
+    product_dto_cache[product_id] = std::move(response);
   }
   
   RebuildAllJson();
@@ -106,8 +98,8 @@ drogon::Task<void> service::product::InitializeCache() {
 }
 
 drogon::Task<void> service::product::RefreshCache(std::string product_id) {
-  auto p_opt = co_await repo::product::FindById(product_id);
-  if (!p_opt) {
+  auto product_opt{co_await repo::product::FindById(product_id)};
+  if (!product_opt) {
     std::unique_lock lock{cache_mutex};
     product_cache_json.erase(product_id);
     product_dto_cache.erase(product_id);
@@ -115,42 +107,42 @@ drogon::Task<void> service::product::RefreshCache(std::string product_id) {
     co_return;
   }
 
-  auto images = co_await repo::product_images::FindByProductId(product_id);
+  auto images{co_await repo::product_images::FindByProductId(product_id)};
   std::vector<dto::ProductImageResponse> img_dtos;
-  for(const auto& img : images) {
+  for(const auto& image : images) {
       dto::ProductImageResponse ir;
-      ir.id = img.getId();
-      ir.product_id = img.getProductId();
-      ir.url = img.getUrl();
-      ir.is_cover = img.getIsCover();
-      ir.sort_order = img.getSortOrder();
-      ir.uploaded_by = img.getUploadedBy();
-      ir.created_at = img.getCreatedAt();
+      ir.id = image.getId();
+      ir.product_id = image.getProductId();
+      ir.url = image.getUrl();
+      ir.is_cover = image.getIsCover();
+      ir.sort_order = image.getSortOrder();
+      ir.uploaded_by = image.getUploadedBy();
+      ir.created_at = image.getCreatedAt();
       img_dtos.push_back(std::move(ir));
   }
 
-  auto resp = ToProductResponse(*p_opt, img_dtos);
-  auto json = glz::write_json(resp);
+  auto response{ToProductResponse(*product_opt, img_dtos)};
+  auto json{glz::write_json(response)};
 
   {
     std::unique_lock lock{cache_mutex};
     product_cache_json[product_id] = std::move(json).value_or("{}");
-    product_dto_cache[product_id] = std::move(resp);
+    product_dto_cache[product_id] = std::move(response);
     RebuildAllJson();
   }
 }
 
 drogon::Task<dto::ProductResponse> service::product::Create(
-    dto::CreateProductRequest request) {
-  domain::Product p;
-  p.setType(std::move(request.type));
-  p.setName(std::move(request.name));
-  p.setPrice(std::move(request.price));
-  if (request.area) p.setArea(std::move(*request.area));
-  if (request.description) p.setDescription(std::move(*request.description));
-  p.setIsActive(request.is_active);
+    dto::CreateProductRequest request, std::vector<std::string> new_image_urls) {
+  domain::Product product;
+  product.setType(std::move(request.type));
+  product.setName(std::move(request.name));
+  product.setPrice(std::move(request.price));
+  if (request.area) product.setArea(std::move(*request.area));
+  if (request.description) product.setDescription(std::move(*request.description));
+  product.setIsActive(request.is_active);
 
-  auto created{co_await repo::product::Create(std::move(p))};
+  auto created{co_await repo::product::Create(std::move(product))};
   
   // Update cache
   co_await RefreshCache(*created.getId());
@@ -159,13 +151,13 @@ drogon::Task<dto::ProductResponse> service::product::Create(
 }
 
 drogon::Task<void> service::product::Update(
-    std::string id, dto::UpdateProductRequest request) {
-  auto existing_opt{co_await repo::product::FindById(id)};
-  if (!existing_opt) {
+    std::string product_id, dto::UpdateProductRequest request, std::vector<std::string> new_image_urls) {
+  auto product_opt{co_await repo::product::FindById(product_id)};
+  if (!product_opt) {
     throw std::runtime_error{"Product not found"};
   }
 
-  auto existing{std::move(*existing_opt)};
+  auto existing{std::move(*product_opt)};
 
   if (request.type) existing.setType(std::move(*request.type));
   if (request.name) existing.setName(std::move(*request.name));
@@ -176,23 +168,23 @@ drogon::Task<void> service::product::Update(
 
   co_await repo::product::Update(existing);
   
-  co_await RefreshCache(id);
+  co_await RefreshCache(product_id);
 }
 
-drogon::Task<void> service::product::Delete(std::string id) {
-  auto deleted{co_await repo::product::DeleteById(id)};
+drogon::Task<void> service::product::Delete(std::string product_id) {
+  auto deleted{co_await repo::product::DeleteById(product_id)};
   if (deleted) {
     std::unique_lock lock{cache_mutex};
-    product_cache_json.erase(id);
-    product_dto_cache.erase(id);
+    product_cache_json.erase(product_id);
+    product_dto_cache.erase(product_id);
     RebuildAllJson();
   }
 }
 
 std::optional<std::string> service::product::GetByIdJson(
-    std::string_view id) {
+    std::string_view product_id) {
   std::shared_lock lock{cache_mutex};
-  if (auto it{product_cache_json.find(std::string(id))}; it != product_cache_json.end()) {
+  if (auto it{product_cache_json.find(std::string(product_id))}; it != product_cache_json.end()) {
     return it->second;
   }
   return std::nullopt;
@@ -207,14 +199,14 @@ std::vector<dto::ProductResponse> service::product::Search(
     dto::ProductSearchQuery query) {
   std::shared_lock lock{cache_mutex};
   
-  auto filtered_view = product_dto_cache | std::views::values 
-                       | std::views::filter([&query](const dto::ProductResponse& p) {
-    if (query.name && p.name && p.name->find(*query.name) == std::string::npos) return false;
-    if (query.type && p.type && *p.type != *query.type) return false;
-    if (query.min_price && p.price && std::stod(*p.price) < std::stod(*query.min_price)) return false;
-    if (query.max_price && p.price && std::stod(*p.price) > std::stod(*query.max_price)) return false;
+  auto filtered_view{product_dto_cache | std::views::values 
+                       | std::views::filter([&query](const dto::ProductResponse& product) {
+    if (query.name && product.name && product.name->find(*query.name) == std::string::npos) return false;
+    if (query.type && product.type && *product.type != *query.type) return false;
+    if (query.min_price && product.price && std::stod(*product.price) < std::stod(*query.min_price)) return false;
+    if (query.max_price && product.price && std::stod(*product.price) > std::stod(*query.max_price)) return false;
     return true;
-  });
+  })};
 
   std::vector<dto::ProductResponse> result;
   std::ranges::copy(filtered_view, std::back_inserter(result));

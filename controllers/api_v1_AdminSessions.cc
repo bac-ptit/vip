@@ -1,70 +1,42 @@
-
 #include "api_v1_AdminSessions.h"
 #include <glaze/glaze.hpp>
-import std;
 
 using namespace api::v1;
 
-Task<> adminsessions::GetById(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id) {
-  try {
-    auto response{co_await service::admin_sessions::GetById(std::move(id))};
-    if (response) {
-      auto json{glz::write_json(*response)};
-      auto resp{HttpResponse::newHttpResponse()};
-      resp->setBody(std::move(json).value_or("{}"));
-      resp->setContentTypeCode(CT_APPLICATION_JSON);
-      callback(resp);
-    } else {
-      callback(HttpResponse::newNotFoundResponse());
+Task<> adminsessions::GetById(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string session_id) {
+    auto response_dto{co_await service::admin_sessions::GetById(std::move(session_id))};
+    if (!response_dto) {
+        callback(HttpResponse::newNotFoundResponse());
+        co_return;
     }
-  } catch (const std::exception& e) {
+    
     auto resp{HttpResponse::newHttpResponse()};
-    resp->setStatusCode(k400BadRequest);
-    resp->setBody(e.what());
+    resp->setBody(glz::write_json(*response_dto).value_or("{}"));
+    resp->setContentTypeCode(CT_APPLICATION_JSON);
     callback(resp);
-  }
-  co_return;
 }
 
 Task<> adminsessions::GetByAdminId(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string admin_id) {
-  try {
-    auto response{co_await service::admin_sessions::GetByAdminId(std::move(admin_id))};
-    auto json{glz::write_json(response)};
+    auto sessions{co_await service::admin_sessions::GetByAdminId(std::move(admin_id))};
+    
     auto resp{HttpResponse::newHttpResponse()};
-    resp->setBody(std::move(json).value_or("[]"));
+    resp->setBody(glz::write_json(sessions).value_or("[]"));
     resp->setContentTypeCode(CT_APPLICATION_JSON);
     callback(resp);
-  } catch (const std::exception& e) {
-    auto resp{HttpResponse::newHttpResponse()};
-    resp->setStatusCode(k400BadRequest);
-    resp->setBody(e.what());
-    callback(resp);
-  }
-  co_return;
 }
 
-Task<> adminsessions::Revoke(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id) {
-  try {
-    co_await service::admin_sessions::RevokeSession(std::move(id));
-    callback(HttpResponse::newHttpResponse());
-  } catch (const std::exception& e) {
+Task<> adminsessions::Revoke(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string session_id) {
+    co_await service::admin_sessions::RevokeSession(std::move(session_id));
+    
     auto resp{HttpResponse::newHttpResponse()};
-    resp->setStatusCode(k400BadRequest);
-    resp->setBody(e.what());
+    resp->setStatusCode(k204NoContent);
     callback(resp);
-  }
-  co_return;
 }
 
 Task<> adminsessions::RevokeAll(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string admin_id) {
-  try {
     co_await service::admin_sessions::RevokeAllAdminSessions(std::move(admin_id));
-    callback(HttpResponse::newHttpResponse());
-  } catch (const std::exception& e) {
+    
     auto resp{HttpResponse::newHttpResponse()};
-    resp->setStatusCode(k400BadRequest);
-    resp->setBody(e.what());
+    resp->setStatusCode(k204NoContent);
     callback(resp);
-  }
-  co_return;
 }

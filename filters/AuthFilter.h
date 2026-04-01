@@ -1,21 +1,17 @@
 #pragma once
-
 #include <drogon/HttpFilter.h>
+#include <drogon/HttpTypes.h>
 
 using namespace drogon;
 
 namespace filter {
 
-/**
- * @brief Authentication filter for VIP backend.
- * Checks session and validates against exempted paths in config.yaml.
- */
-class AuthFilter : public HttpFilter<AuthFilter> {
+class AuthFilter : public drogon::HttpFilter<AuthFilter> {
  public:
   AuthFilter();
   void doFilter(const HttpRequestPtr& req,
-                FilterCallback&& fcb,
-                FilterChainCallback&& fccb) override;
+                FilterCallback&& callback,
+                FilterChainCallback&& filter_chain_callback) override;
 };
 
 }  // namespace filter

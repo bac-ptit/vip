@@ -1,12 +1,13 @@
 #pragma once
+#include <string>
 
 #include <functional>
 #include <string>
 
 #include <drogon/HttpController.h>
 
-import dto;
-import service;
+#include "dto/dto.h"
+#include "services/service.h"
 
 using namespace drogon;
 
@@ -23,7 +24,7 @@ class registrationinterests : public drogon::HttpController<registrationinterest
   METHOD_LIST_END
 
   Task<> Create(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, dto::CreateRegistrationInterestRequest request);
-  Task<> Delete(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id);
+  Task<> Delete(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string registration_interest_id);
   Task<> GetByRegistrationId(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string registration_id);
 };
 

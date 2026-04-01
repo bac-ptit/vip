@@ -1,34 +1,23 @@
-//
-// Created by bac on 3/28/26.
-//
-module;
-#include <drogon/drogon.h>
-#include <models/FloorPlans.h>
-import std;
+#include "floor_plans_service.h"
+#include <repositories/floor_plans_repository.h>
+#include <domains/floor_plans.h>
+#include <algorithm>
+#include <ranges>
 
-module service;
+namespace service::floor_plans {
 
-import repo;
-import dto;
-import domain;
-
-using namespace drogon;
-
-namespace {
-dto::FloorPlanResponse ToFloorPlanResponse(const domain::FloorPlans& f) {
-  dto::FloorPlanResponse resp;
-  resp.id = f.getId();
-  resp.title = f.getTitle();
-  resp.url = f.getUrl();
-  resp.sort_order = f.getSortOrder();
-  resp.is_active = f.getIsActive();
-  resp.uploaded_by = f.getUploadedBy();
-  resp.created_at = f.getCreatedAt();
-  return resp;
+static dto::FloorPlanResponse ToFloorPlanResponse(const domain::FloorPlans& f) {
+  return {
+      .id = f.getId(),
+      .title = f.getTitle(),
+      .url = f.getUrl(),
+      .sort_order = f.getSortOrder(),
+      .is_active = f.getIsActive(),
+      .uploaded_by = f.getUploadedBy(),
+      .created_at = f.getCreatedAt()};
 }
-}  // namespace
 
-drogon::Task<dto::FloorPlanResponse> service::floor_plans::Create(
+drogon::Task<dto::FloorPlanResponse> Create(
     dto::CreateFloorPlanRequest request, std::optional<std::string> admin_id) {
   domain::FloorPlans f;
   f.setTitle(std::move(request.title));
@@ -41,9 +30,9 @@ drogon::Task<dto::FloorPlanResponse> service::floor_plans::Create(
   co_return ToFloorPlanResponse(created);
 }
 
-drogon::Task<void> service::floor_plans::Update(
-    std::string id, dto::UpdateFloorPlanRequest request) {
-  auto existing_opt{co_await repo::floor_plans::FindById(id)};
+drogon::Task<void> Update(
+    std::string floor_plan_id, dto::UpdateFloorPlanRequest request) {
+  auto existing_opt{co_await repo::floor_plans::FindById(floor_plan_id)};
   if (!existing_opt) {
     throw std::runtime_error{"Floor plan not found"};
   }
@@ -58,20 +47,20 @@ drogon::Task<void> service::floor_plans::Update(
   co_await repo::floor_plans::Update(existing);
 }
 
-drogon::Task<void> service::floor_plans::Delete(std::string id) {
-  co_await repo::floor_plans::DeleteById(std::move(id));
+drogon::Task<void> Delete(std::string floor_plan_id) {
+  co_await repo::floor_plans::DeleteById(std::move(floor_plan_id));
 }
 
-drogon::Task<std::optional<dto::FloorPlanResponse>> service::floor_plans::GetById(
-    std::string id) {
-  auto f_opt{co_await repo::floor_plans::FindById(std::move(id))};
+drogon::Task<std::optional<dto::FloorPlanResponse>> GetById(
+    std::string floor_plan_id) {
+  auto f_opt{co_await repo::floor_plans::FindById(floor_plan_id)};
   if (f_opt) {
     co_return ToFloorPlanResponse(std::move(*f_opt));
   }
   co_return std::nullopt;
 }
 
-drogon::Task<std::vector<dto::FloorPlanResponse>> service::floor_plans::GetAll() {
+drogon::Task<std::vector<dto::FloorPlanResponse>> GetAll() {
   auto floor_plans_raw{co_await repo::floor_plans::FindAll()};
   std::vector<dto::FloorPlanResponse> result;
   result.reserve(floor_plans_raw.size());
@@ -81,7 +70,7 @@ drogon::Task<std::vector<dto::FloorPlanResponse>> service::floor_plans::GetAll()
   co_return result;
 }
 
-drogon::Task<std::vector<dto::FloorPlanResponse>> service::floor_plans::GetActive() {
+drogon::Task<std::vector<dto::FloorPlanResponse>> GetActive() {
   auto floor_plans_raw{co_await repo::floor_plans::FindActive()};
   std::vector<dto::FloorPlanResponse> result;
   result.reserve(floor_plans_raw.size());
@@ -90,3 +79,5 @@ drogon::Task<std::vector<dto::FloorPlanResponse>> service::floor_plans::GetActiv
   
   co_return result;
 }
+
+}  // namespace service::floor_plans

@@ -18,7 +18,6 @@ models and C++20 standards.
 3. **High-Performance Serialization**: `glaze` is the mandatory library for all JSON serialization and deserialization.
    `JsonCpp` is prohibited for new implementations.
 4. **Modern C++26 Conventions**:
-    * **Modules**: Use C++ Modules (`.cppm`) for all new architectural layers.
     * **Brace Initialization**: Use brace initialization `{}` globally (e.g., `auto response{co_await ...};`).
     * **Concise Initializers**: Omit empty braces `{}` for default construction (e.g., use `std::string username;`
       instead of `std::string username{};`).

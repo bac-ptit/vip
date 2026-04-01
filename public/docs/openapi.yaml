@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: VIP Backend API
-  description: High-performance backend for VIP project using Drogon and Glaze. Hỗ trợ Aggregate Update (Product + Images).
+  description: High-performance backend for VIP project using Drogon and Glaze. Supports aggregate updates and optimized image handling.
   version: 1.0.0
 servers:
   - url: /api/v1
@@ -137,8 +137,6 @@ components:
         uploaded_by: { type: string, format: uuid }
         created_at: { type: string, format: date-time }
 
-    # ... rest of schemas (Registration, ProjectInfo, etc. - unchanged)
-
 paths:
   # Auth
   /auth/register:
@@ -161,14 +159,6 @@ paths:
       responses:
         200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/AdminResponse' } } } }
         401: { description: Unauthorized }
-
-  /auth/logout:
-    post:
-      tags: [Auth]
-      summary: Logout current session (Auth)
-      security: [{ AdminAuth: [] }, { CookieAuth: [] }]
-      responses:
-        200: { description: Success }
 
   # Products
   /products:
@@ -197,18 +187,18 @@ paths:
       responses:
         200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/ProductResponse' } } } }
 
-  /products/{id}:
+  /products/{product_id}:
     get:
       tags: [Product]
       summary: Get product by ID (Public)
-      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      parameters: [{ name: product_id, in: path, required: true, schema: { type: string } }]
       responses:
         200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/ProductResponse' } } } }
     put:
       tags: [Product]
       summary: Update product, add/delete images (Auth + ImgBB)
       security: [{ AdminAuth: [] }]
-      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      parameters: [{ name: product_id, in: path, required: true, schema: { type: string } }]
       requestBody:
         content:
           multipart/form-data:
@@ -229,18 +219,31 @@ paths:
       tags: [Product]
       summary: Delete product and all its images (Auth)
       security: [{ AdminAuth: [] }]
-      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      parameters: [{ name: product_id, in: path, required: true, schema: { type: string } }]
       responses:
         200: { description: Success }
 
-  /products/search:
-    get:
-      tags: [Product]
-      summary: Search products (Public)
-      parameters:
-        - { name: name, in: query, schema: { type: string } }
-        - { name: type, in: query, schema: { type: string } }
-        - { name: min_price, in: query, schema: { type: string } }
-        - { name: max_price, in: query, schema: { type: string } }
+  # Floor Plans
+  /floorplans/{floor_plan_id}:
+    parameters: [{ name: floor_plan_id, in: path, required: true, schema: { type: string } }]
+    delete:
+      tags: [FloorPlan]
+      summary: Delete floor plan (Auth)
+      security: [{ AdminAuth: [] }]
       responses:
-        200: { description: Success, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ProductResponse' } } } } }
+        204: { description: Deleted }
+
+  # Media
+  /media/{media_id}:
+    parameters: [{ name: media_id, in: path, required: true, schema: { type: string } }]
+    get:
+      tags: [Media]
+      summary: Get media by ID
+      responses:
+        200: { description: Success, content: { application/json: { schema: { $ref: '#/components/schemas/MediaResponse' } } } }
+    delete:
+      tags: [Media]
+      summary: Delete media (Auth)
+      security: [{ AdminAuth: [] }]
+      responses:
+        204: { description: Deleted }

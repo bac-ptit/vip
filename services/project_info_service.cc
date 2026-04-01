@@ -1,59 +1,60 @@
-//
-// Created by bac on 3/28/26.
-//
-module;
+#include <utility>
+#include <stdexcept>
+#include <vector>
+#include <optional>
+#include <string>
+#include <ranges>
+#include "project_info_service.h"
+
 #include <drogon/drogon.h>
 #include <models/ProjectInfo.h>
-import std;
 
-module service;
-
-import repo;
-import dto;
-import domain;
+#include <repositories/repo.h>
+#include <dto/dto.h>
+#include <domains/domain.h>
 
 using namespace drogon;
 
-namespace {
-dto::ProjectInfoResponse ToProjectInfoResponse(const domain::ProjectInfo& p) {
-  dto::ProjectInfoResponse resp;
-  resp.id = p.getId();
-  resp.name = p.getName();
-  resp.developer = p.getDeveloper();
-  resp.scale = p.getScale();
-  resp.description = p.getDescription();
-  resp.map_lat = p.getMapLat();
-  resp.map_lng = p.getMapLng();
-  resp.map_zoom = p.getMapZoom();
-  resp.updated_by = p.getUpdatedBy();
-  resp.updated_at = p.getUpdatedAt();
-  return resp;
+namespace service::project_info {
+
+static dto::ProjectInfoResponse ToProjectInfoResponse(const domain::ProjectInfo& project_info) {
+  dto::ProjectInfoResponse response;
+  response.id = project_info.getId();
+  response.name = project_info.getName();
+  response.developer = project_info.getDeveloper();
+  response.scale = project_info.getScale();
+  response.description = project_info.getDescription();
+  response.map_lat = project_info.getMapLat();
+  response.map_lng = project_info.getMapLng();
+  response.map_zoom = project_info.getMapZoom();
+  response.updated_by = project_info.getUpdatedBy();
+  response.updated_at = project_info.getUpdatedAt();
+  return response;
 }
-}  // namespace
 
-drogon::Task<dto::ProjectInfoResponse> service::project_info::Create(
+drogon::Task<dto::ProjectInfoResponse> Create(
     dto::CreateProjectInfoRequest request) {
-  domain::ProjectInfo p;
-  p.setName(std::move(request.name));
-  if (request.developer) p.setDeveloper(std::move(*request.developer));
-  if (request.scale) p.setScale(std::move(*request.scale));
-  if (request.description) p.setDescription(std::move(*request.description));
-  if (request.map_lat) p.setMapLat(*request.map_lat);
-  if (request.map_lng) p.setMapLng(*request.map_lng);
-  p.setMapZoom(request.map_zoom);
+  domain::ProjectInfo project_info;
+  project_info.setName(std::move(request.name));
+  if (request.developer) project_info.setDeveloper(std::move(*request.developer));
+  if (request.scale) project_info.setScale(std::move(*request.scale));
+  if (request.description) project_info.setDescription(std::move(*request.description));
+  if (request.map_lat) project_info.setMapLat(*request.map_lat);
+  if (request.map_lng) project_info.setMapLng(*request.map_lng);
+  project_info.setMapZoom(request.map_zoom);
 
-  auto created{co_await repo::project_info::Create(p)};
+  auto created{co_await repo::project_info::Create(project_info)};
   co_return ToProjectInfoResponse(created);
 }
 
-drogon::Task<void> service::project_info::Update(
-    std::string id, dto::UpdateProjectInfoRequest request) {
-  auto existing_opt{co_await repo::project_info::FindById(id)};
-  if (!existing_opt) {
+drogon::Task<void> Update(
+    std::string identifier, dto::UpdateProjectInfoRequest request) {
+  auto project_opt{co_await repo::project_info::FindById(identifier)};
+  if (!project_opt) {
     throw std::runtime_error{"Project info not found"};
   }
 
-  auto existing{std::move(*existing_opt)};
+  auto existing{std::move(*project_opt)};
 
   if (request.name) existing.setName(std::move(*request.name));
   if (request.developer) existing.setDeveloper(std::move(*request.developer));
@@ -66,20 +67,20 @@ drogon::Task<void> service::project_info::Update(
   co_await repo::project_info::Update(existing);
 }
 
-drogon::Task<void> service::project_info::Delete(std::string id) {
-  co_await repo::project_info::DeleteById(std::move(id));
+drogon::Task<void> Delete(std::string identifier) {
+  co_await repo::project_info::DeleteById(std::move(identifier));
 }
 
-drogon::Task<std::optional<dto::ProjectInfoResponse>> service::project_info::GetById(
-    std::string id) {
-  auto p_opt{co_await repo::project_info::FindById(std::move(id))};
-  if (p_opt) {
-    co_return ToProjectInfoResponse(std::move(*p_opt));
+drogon::Task<std::optional<dto::ProjectInfoResponse>> GetById(
+    std::string identifier) {
+  auto project_opt{co_await repo::project_info::FindById(std::move(identifier))};
+  if (project_opt) {
+    co_return ToProjectInfoResponse(std::move(*project_opt));
   }
   co_return std::nullopt;
 }
 
-drogon::Task<std::vector<dto::ProjectInfoResponse>> service::project_info::GetAll() {
+drogon::Task<std::vector<dto::ProjectInfoResponse>> GetAll() {
   auto projects_raw{co_await repo::project_info::FindAll()};
   std::vector<dto::ProjectInfoResponse> result;
   result.reserve(projects_raw.size());
@@ -88,3 +89,5 @@ drogon::Task<std::vector<dto::ProjectInfoResponse>> service::project_info::GetAl
   
   co_return result;
 }
+
+}  // namespace service::project_info

@@ -1,3 +1,6 @@
+#pragma once
+#include <vector>
+#include <string>
 /**
  *
  *  FloorPlans.h
@@ -5,7 +8,6 @@
  *
  */
 
-#pragma once
 #include <drogon/orm/Result.h>
 #include <drogon/orm/Row.h>
 #include <drogon/orm/Field.h>

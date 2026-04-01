@@ -1,12 +1,13 @@
 #pragma once
+#include <string>
 
 #include <functional>
 #include <string>
 
 #include <drogon/HttpController.h>
 
-import dto;
-import service;
+#include "dto/dto.h"
+#include "services/service.h"
 
 using namespace drogon;
 
@@ -23,9 +24,9 @@ class adminsessions : public drogon::HttpController<adminsessions> {
   
   METHOD_LIST_END
 
-  Task<> GetById(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id);
+  Task<> GetById(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string session_id);
   Task<> GetByAdminId(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string admin_id);
-  Task<> Revoke(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id);
+  Task<> Revoke(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string session_id);
   Task<> RevokeAll(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string admin_id);
 };
 

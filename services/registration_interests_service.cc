@@ -1,17 +1,21 @@
+#include <utility>
+#include <vector>
+#include <string>
+#include "registration_interests_service.h"
 //
 // Created by bac on 3/27/26.
 //
 
-module;
+
 #include <drogon/HttpTypes.h>
 #include <models/RegistrationInterests.h>
-import std;
 
-module service;
 
-import dto;
-import repo;
-import domain;
+
+
+#include <dto/dto.h>
+#include <repositories/repo.h>
+#include <domains/domain.h>
 
 namespace service::registration_interests {
 
@@ -56,8 +60,8 @@ drogon::Task<std::vector<dto::RegistrationInterestResponse>> GetAll() {
   co_return responses;
 }
 
-drogon::Task<void> Delete(std::string id) {
-  co_await repo::registration_interests::DeleteById(std::move(id));
+drogon::Task<void> Delete(std::string registrationId) {
+  co_await repo::registration_interests::DeleteById(std::move(registrationId));
 }
 
 }  // namespace service::registration_interests

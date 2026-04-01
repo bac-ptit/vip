@@ -1,65 +1,63 @@
-//
-// Created by bac on 3/28/26.
-//
-module;
+#include <utility>
+#include <optional>
+#include <string>
+#include "site_settings_service.h"
+
 #include <drogon/drogon.h>
 #include <models/SiteSettings.h>
-import std;
 
-module service;
-
-import repo;
-import dto;
-import domain;
+#include <repositories/repo.h>
+#include <dto/dto.h>
+#include <domains/domain.h>
 
 using namespace drogon;
 
 namespace {
-dto::SiteSettingsResponse ToSiteSettingsResponse(const domain::SiteSettings& s) {
-  dto::SiteSettingsResponse resp;
-  resp.id = s.getId();
-  resp.hotline = s.getHotline();
-  resp.email = s.getEmail();
-  resp.address = s.getAddress();
-  resp.zalo_link = s.getZaloLink();
-  resp.facebook_link = s.getFacebookLink();
-  resp.logo_url = s.getLogoUrl();
-  resp.tagline = s.getTagline();
-  resp.updated_by = s.getUpdatedBy();
-  resp.updated_at = s.getUpdatedAt();
-  return resp;
+dto::SiteSettingsResponse ToSiteSettingsResponse(const domain::SiteSettings& site_settings) {
+  dto::SiteSettingsResponse response;
+  response.id = site_settings.getId();
+  response.hotline = site_settings.getHotline();
+  response.email = site_settings.getEmail();
+  response.address = site_settings.getAddress();
+  response.zalo_link = site_settings.getZaloLink();
+  response.facebook_link = site_settings.getFacebookLink();
+  response.logo_url = site_settings.getLogoUrl();
+  response.tagline = site_settings.getTagline();
+  response.updated_by = site_settings.getUpdatedBy();
+  response.updated_at = site_settings.getUpdatedAt();
+  return response;
 }
 }  // namespace
 
 drogon::Task<std::optional<dto::SiteSettingsResponse>> service::site_settings::GetSettings() {
-  auto s{co_await repo::site_settings::GetSettings()};
-  if (s) {
-    co_return ToSiteSettingsResponse(*s);
+  auto site_settings_opt{co_await repo::site_settings::GetSettings()};
+  if (site_settings_opt) {
+    co_return ToSiteSettingsResponse(*site_settings_opt);
   }
   co_return std::nullopt;
 }
 
 drogon::Task<void> service::site_settings::Update(
     dto::UpdateSiteSettingsRequest request, std::optional<std::string> admin_id) {
-  auto existing{co_await repo::site_settings::GetSettings()};
+  auto existing_opt{co_await repo::site_settings::GetSettings()};
   
-  domain::SiteSettings s;
-  if (existing) {
-    s = std::move(*existing);
+  domain::SiteSettings site_settings;
+  if (existing_opt) {
+    site_settings = std::move(*existing_opt);
   }
 
-  if (request.hotline) s.setHotline(std::move(*request.hotline));
-  if (request.email) s.setEmail(std::move(*request.email));
-  if (request.address) s.setAddress(std::move(*request.address));
-  if (request.zalo_link) s.setZaloLink(std::move(*request.zalo_link));
-  if (request.facebook_link) s.setFacebookLink(std::move(*request.facebook_link));
-  if (request.logo_url) s.setLogoUrl(std::move(*request.logo_url));
-  if (request.tagline) s.setTagline(std::move(*request.tagline));
-  if (admin_id) s.setUpdatedBy(*admin_id);
+  if (request.hotline) site_settings.setHotline(std::move(*request.hotline));
+  if (request.email) site_settings.setEmail(std::move(*request.email));
+  if (request.address) site_settings.setAddress(std::move(*request.address));
+  if (request.zalo_link) site_settings.setZaloLink(std::move(*request.zalo_link));
+  if (request.facebook_link) site_settings.setFacebookLink(std::move(*request.facebook_link));
+  if (request.logo_url) site_settings.setLogoUrl(std::move(*request.logo_url));
+  if (request.tagline) site_settings.setTagline(std::move(*request.tagline));
+  if (admin_id) site_settings.setUpdatedBy(*admin_id);
 
-  if (existing) {
-    co_await repo::site_settings::Update(s);
+  if (existing_opt) {
+    co_await repo::site_settings::Update(site_settings);
   } else {
-    co_await repo::site_settings::Create(s);
+    co_await repo::site_settings::Create(site_settings);
   }
 }

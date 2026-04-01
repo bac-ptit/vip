@@ -1,58 +1,59 @@
-//
-// Created by bac on 3/28/26.
-//
-module;
+#include <utility>
+#include <stdexcept>
+#include <vector>
+#include <optional>
+#include <string>
+#include <ranges>
+#include "media_service.h"
+
 #include <drogon/drogon.h>
 #include <models/Media.h>
-import std;
 
-module service;
-
-import repo;
-import dto;
-import domain;
+#include <repositories/repo.h>
+#include <dto/dto.h>
+#include <domains/domain.h>
 
 using namespace drogon;
 
 namespace {
-dto::MediaResponse ToMediaResponse(const domain::Media& m) {
-  dto::MediaResponse resp;
-  resp.id = m.getId();
-  resp.type = m.getType();
-  resp.title = m.getTitle();
-  resp.url = m.getUrl();
-  resp.thumbnail = m.getThumbnail();
-  resp.sort_order = m.getSortOrder();
-  resp.is_active = m.getIsActive();
-  resp.uploaded_by = m.getUploadedBy();
-  resp.created_at = m.getCreatedAt();
-  return resp;
+dto::MediaResponse ToMediaResponse(const domain::Media& media) {
+  dto::MediaResponse response;
+  response.id = media.getId();
+  response.type = media.getType();
+  response.title = media.getTitle();
+  response.url = media.getUrl();
+  response.thumbnail = media.getThumbnail();
+  response.sort_order = media.getSortOrder();
+  response.is_active = media.getIsActive();
+  response.uploaded_by = media.getUploadedBy();
+  response.created_at = media.getCreatedAt();
+  return response;
 }
 }  // namespace
 
 drogon::Task<dto::MediaResponse> service::media::Create(
     dto::CreateMediaRequest request, std::optional<std::string> admin_id) {
-  domain::Media m;
-  m.setType(std::move(request.type));
-  if (request.title) m.setTitle(std::move(*request.title));
-  m.setUrl(std::move(request.url));
-  if (request.thumbnail) m.setThumbnail(std::move(*request.thumbnail));
-  m.setSortOrder(request.sort_order);
-  m.setIsActive(request.is_active);
-  if (admin_id) m.setUploadedBy(std::move(*admin_id));
+  domain::Media media;
+  media.setType(std::move(request.type));
+  if (request.title) media.setTitle(std::move(*request.title));
+  media.setUrl(std::move(request.url));
+  if (request.thumbnail) media.setThumbnail(std::move(*request.thumbnail));
+  media.setSortOrder(request.sort_order);
+  media.setIsActive(request.is_active);
+  if (admin_id) media.setUploadedBy(std::move(*admin_id));
 
-  auto created{co_await repo::media::Create(m)};
+  auto created{co_await repo::media::Create(media)};
   co_return ToMediaResponse(created);
 }
 
 drogon::Task<void> service::media::Update(
-    std::string id, dto::UpdateMediaRequest request) {
-  auto existing_opt{co_await repo::media::FindById(id)};
-  if (!existing_opt) {
+    std::string media_id, dto::UpdateMediaRequest request) {
+  auto media_opt{co_await repo::media::FindById(media_id)};
+  if (!media_opt) {
     throw std::runtime_error{"Media not found"};
   }
 
-  auto existing{std::move(*existing_opt)};
+  auto existing{std::move(*media_opt)};
 
   if (request.type) existing.setType(std::move(*request.type));
   if (request.title) existing.setTitle(std::move(*request.title));
@@ -64,15 +65,15 @@ drogon::Task<void> service::media::Update(
   co_await repo::media::Update(existing);
 }
 
-drogon::Task<void> service::media::Delete(std::string id) {
-  co_await repo::media::DeleteById(std::move(id));
+drogon::Task<void> service::media::Delete(std::string media_id) {
+  co_await repo::media::DeleteById(std::move(media_id));
 }
 
 drogon::Task<std::optional<dto::MediaResponse>> service::media::GetById(
-    std::string id) {
-  auto m_opt{co_await repo::media::FindById(std::move(id))};
-  if (m_opt) {
-    co_return ToMediaResponse(std::move(*m_opt));
+    std::string media_id) {
+  auto media_opt{co_await repo::media::FindById(std::move(media_id))};
+  if (media_opt) {
+    co_return ToMediaResponse(std::move(*media_opt));
   }
   co_return std::nullopt;
 }

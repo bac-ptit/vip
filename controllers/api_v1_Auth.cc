@@ -1,9 +1,15 @@
-
+#include <utility>
+#include <string>
+#include <exception>
+#include <functional>
+#include <map>
+#include <drogon/drogon.h>
+#include <drogon/HttpTypes.h>
 #include "api_v1_Auth.h"
 #include <glaze/glaze.hpp>
-import std;
 
 using namespace api::v1;
+using namespace drogon;
 
 Task<> auth::Register(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, dto::RegisterAdminRequest request) {
   try {

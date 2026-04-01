@@ -1,73 +1,51 @@
-
 #include "api_v1_Registrations.h"
 #include <glaze/glaze.hpp>
-import std;
 
 using namespace api::v1;
 
 Task<> registrations::Create(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, dto::CreateRegistrationRequest request) {
-  try {
-    auto response{co_await service::registrations::Create(std::move(request))};
-    auto json{glz::write_json(response)};
+    auto response_dto{co_await service::registrations::Create(std::move(request))};
+    
     auto resp{HttpResponse::newHttpResponse()};
-    resp->setBody(std::move(json).value_or("{}"));
+    resp->setStatusCode(k201Created);
+    resp->setBody(glz::write_json(response_dto).value_or("{}"));
     resp->setContentTypeCode(CT_APPLICATION_JSON);
     callback(resp);
-  } catch (const std::exception& e) {
-    auto resp{HttpResponse::newHttpResponse()};
-    resp->setStatusCode(k400BadRequest);
-    resp->setBody(e.what());
-    callback(resp);
-  }
-  co_return;
 }
 
-Task<> registrations::Update(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id, dto::UpdateRegistrationRequest request) {
-  try {
-    co_await service::registrations::Update(std::move(id), std::move(request));
-    callback(HttpResponse::newHttpResponse());
-  } catch (const std::exception& e) {
+Task<> registrations::Update(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string registration_id, dto::UpdateRegistrationRequest request) {
+    co_await service::registrations::Update(std::move(registration_id), std::move(request));
+    
     auto resp{HttpResponse::newHttpResponse()};
-    resp->setStatusCode(k400BadRequest);
-    resp->setBody(e.what());
+    resp->setStatusCode(k204NoContent);
     callback(resp);
-  }
-  co_return;
 }
 
-Task<> registrations::Delete(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id) {
-  try {
-    co_await service::registrations::Delete(std::move(id));
-    callback(HttpResponse::newHttpResponse());
-  } catch (const std::exception& e) {
+Task<> registrations::Delete(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string registration_id) {
+    co_await service::registrations::Delete(std::move(registration_id));
+    
     auto resp{HttpResponse::newHttpResponse()};
-    resp->setStatusCode(k404NotFound);
-    resp->setBody(e.what());
+    resp->setStatusCode(k204NoContent);
     callback(resp);
-  }
-  co_return;
 }
 
-Task<> registrations::GetById(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string id) {
-  auto response{co_await service::registrations::GetById(std::move(id))};
-  if (response) {
-    auto json{glz::write_json(*response)};
+Task<> registrations::GetById(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback, std::string registration_id) {
+  auto response_dto{co_await service::registrations::GetById(std::move(registration_id))};
+  if (response_dto) {
     auto resp{HttpResponse::newHttpResponse()};
-    resp->setBody(std::move(json).value_or("{}"));
+    resp->setBody(glz::write_json(*response_dto).value_or("{}"));
     resp->setContentTypeCode(CT_APPLICATION_JSON);
     callback(resp);
   } else {
     callback(HttpResponse::newNotFoundResponse());
   }
-  co_return;
 }
 
 Task<> registrations::GetAll(HttpRequestPtr req, std::function<void(const HttpResponsePtr&)> callback) {
-  auto response{co_await service::registrations::GetAll()};
-  auto json{glz::write_json(response)};
-  auto resp{HttpResponse::newHttpResponse()};
-  resp->setBody(std::move(json).value_or("{}"));
-  resp->setContentTypeCode(CT_APPLICATION_JSON);
-  callback(resp);
-  co_return;
+    auto list{co_await service::registrations::GetAll()};
+    
+    auto resp{HttpResponse::newHttpResponse()};
+    resp->setBody(glz::write_json(list).value_or("[]"));
+    resp->setContentTypeCode(CT_APPLICATION_JSON);
+    callback(resp);
 }

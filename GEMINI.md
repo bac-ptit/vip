@@ -22,7 +22,7 @@ This is the backend for the VIP project, a high-performance system designed usin
 - **Filters:** Middleware for authentication and request processing. Located in `filters/`.
 
 ## Key Development Conventions
-- **C++20 Modules:** All core logic is encapsulated in modules (`.cppm` files).
+- **C++20 Modules:** All core logic is encapsulated in header
 - **Coroutines:** Asynchronous operations use `drogon::Task<>` and `co_await`.
 - **High Performance:** Glaze is preferred over JsonCpp for all serialization.
 - **Brace Initialization:** Use `{}` consistently; omit empty braces for default initialization.
