@@ -39,7 +39,7 @@ The system is fully containerized using **Fedora 43** as the base image for both
 ### Quick Start
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/vip-backend.git
+git clone https://github.com/bac-ptit/vip.git
 cd vip-backend
 
 # Build and start the infrastructure (Backend + Postgres)
