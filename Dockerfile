@@ -13,6 +13,7 @@ RUN --mount=type=cache,target=/var/cache/dnf \
     gcc-c++ \
     ninja-build \
     git \
+    awk \
     curl \
     wget \
     zip \
