@@ -8,7 +8,7 @@ namespace repo::site_settings {
 using SiteSettingsModel = drogon_model::qlattt::SiteSettings;
 
 drogon::Task<std::optional<domain::SiteSettings>> GetSettings() {
-  drogon::orm::CoroMapper<SiteSettingsModel> mapper{drogon::app().getDbClient()};
+  drogon::orm::CoroMapper<SiteSettingsModel> mapper{drogon::app().getFastDbClient()};
   auto results{co_await mapper.findAll()};
   if (results.empty()) {
     co_return std::nullopt;
@@ -17,12 +17,12 @@ drogon::Task<std::optional<domain::SiteSettings>> GetSettings() {
 }
 
 drogon::Task<void> Update(domain::SiteSettings s) {
-  drogon::orm::CoroMapper<SiteSettingsModel> mapper{drogon::app().getDbClient()};
+  drogon::orm::CoroMapper<SiteSettingsModel> mapper{drogon::app().getFastDbClient()};
   co_await mapper.update(s);
 }
 
 drogon::Task<void> Create(domain::SiteSettings s) {
-  drogon::orm::CoroMapper<SiteSettingsModel> mapper{drogon::app().getDbClient()};
+  drogon::orm::CoroMapper<SiteSettingsModel> mapper{drogon::app().getFastDbClient()};
   co_await mapper.insert(s);
 }
 

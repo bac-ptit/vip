@@ -9,13 +9,13 @@ namespace repo::registration_interests {
 using RegistrationInterestsModel = drogon_model::qlattt::RegistrationInterests;
 
 drogon::Task<domain::RegistrationInterests> Create(domain::RegistrationInterests ri) {
-  drogon::orm::CoroMapper<RegistrationInterestsModel> mapper{drogon::app().getDbClient()};
+  drogon::orm::CoroMapper<RegistrationInterestsModel> mapper{drogon::app().getFastDbClient()};
   auto result{co_await mapper.insert(ri)};
   co_return domain::RegistrationInterests{std::move(result)};
 }
 
 drogon::Task<std::vector<domain::RegistrationInterests>> FindByRegistrationId(std::string registration_id) {
-  drogon::orm::CoroMapper<RegistrationInterestsModel> mapper{drogon::app().getDbClient()};
+  drogon::orm::CoroMapper<RegistrationInterestsModel> mapper{drogon::app().getFastDbClient()};
   auto results{co_await mapper.findBy(drogon::orm::Criteria(RegistrationInterestsModel::Cols::_registration_id, drogon::orm::CompareOperator::EQ, registration_id))};
   
   co_return results | std::views::transform([](auto& r) {
@@ -24,12 +24,12 @@ drogon::Task<std::vector<domain::RegistrationInterests>> FindByRegistrationId(st
 }
 
 drogon::Task<void> DeleteByRegistrationId(std::string registration_id) {
-  drogon::orm::CoroMapper<RegistrationInterestsModel> mapper{drogon::app().getDbClient()};
+  drogon::orm::CoroMapper<RegistrationInterestsModel> mapper{drogon::app().getFastDbClient()};
   co_await mapper.deleteBy(drogon::orm::Criteria(RegistrationInterestsModel::Cols::_registration_id, drogon::orm::CompareOperator::EQ, std::move(registration_id)));
 }
 
 drogon::Task<std::vector<domain::RegistrationInterests>> FindAll() {
-  drogon::orm::CoroMapper<RegistrationInterestsModel> mapper{drogon::app().getDbClient()};
+  drogon::orm::CoroMapper<RegistrationInterestsModel> mapper{drogon::app().getFastDbClient()};
   auto results{co_await mapper.findAll()};
   
   co_return results | std::views::transform([](auto& r) {
@@ -38,7 +38,7 @@ drogon::Task<std::vector<domain::RegistrationInterests>> FindAll() {
 }
 
 drogon::Task<bool> DeleteById(std::string registrationId) {
-  drogon::orm::CoroMapper<RegistrationInterestsModel> mapper{drogon::app().getDbClient()};
+  drogon::orm::CoroMapper<RegistrationInterestsModel> mapper{drogon::app().getFastDbClient()};
   auto count{co_await mapper.deleteBy(drogon::orm::Criteria(RegistrationInterestsModel::Cols::_id, drogon::orm::CompareOperator::EQ, std::move(registrationId)))};
   co_return count > 0;
 }

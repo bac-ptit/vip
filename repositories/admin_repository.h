@@ -3,7 +3,6 @@
 #include <optional>
 #include <string>
 #include <drogon/HttpTypes.h>
-#include <drogon/orm/DbClient.h>
 #include <domains/domain.h>
 
 namespace repo::admin {
