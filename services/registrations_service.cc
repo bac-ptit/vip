@@ -91,7 +91,7 @@ drogon::Task<std::vector<dto::RegistrationResponse>> GetAll() {
   auto registrations_raw{co_await repo::registrations::FindAll()};
   std::vector<dto::RegistrationResponse> responses;
   responses.reserve(registrations_raw.size());
-
+  auto db_client{drogon::app().getDbClient()};
   for (auto& registration_raw : registrations_raw) {
     auto registration{std::move(registration_raw)};
     auto interests_raw{co_await repo::registration_interests::FindByRegistrationId(
