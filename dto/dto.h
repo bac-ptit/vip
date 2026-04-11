@@ -23,6 +23,8 @@
 #include "site_settings_dto.h"
 #include "admin_sessions_dto.h"
 #include "activity_logs_dto.h"
+
+
 namespace dto {
 struct ErrorResponse {
   std::string error;
@@ -48,7 +50,8 @@ struct ErrorResponse {
     template <auto Opts>
     static void op(const trantor::Date& value, is_context auto&& ctx, auto&& b,
                    auto&& ix) noexcept {
-      std::string s = value.toFormattedString(false);
+      static std::string fmt{"%Y-%m-%d %H:%M:%S"};
+      auto s{value.toCustomFormattedStringLocal(fmt)};
       serialize<JSON>::op<Opts>(s, ctx, b, ix);
     }
   };
