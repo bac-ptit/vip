@@ -8,7 +8,8 @@ set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
-add_executable(${PROJECT_NAME} main.cc)
+add_executable(${PROJECT_NAME} main.cc
+        domains/registrations.cc)
 
 # Find clang-tidy
 # find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
