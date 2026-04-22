@@ -3,12 +3,6 @@
 
 namespace domain {
 
-void Registrations::MarkAsContacted(std::string admin_id) noexcept {
-  setIsContacted(true);
-  setContactedBy(std::move(admin_id));
-  setContactedAt(trantor::Date::now());
-}
-
 void Registrations::setPhone(const std::string& phone) {
   ValidatePhoneNumber(phone);
   drogon_model::qlattt::Registrations::setPhone(phone);
