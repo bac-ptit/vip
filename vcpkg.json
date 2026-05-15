@@ -1,7 +1,7 @@
 {
   "name": "vip",
   "version-string": "1.0.0",
-  "builtin-baseline": "c27eeddba73f608f10605d80bc0144c1166f8fb7",
+  "builtin-baseline": "6e05a7459609bb0f7de95839c625dc09b5966f31",
   "dependencies": [
     {
       "name": "glaze",
@@ -10,6 +10,18 @@
     {
       "name": "libsodium",
       "version>=": "1.0.21#1"
+    },
+    {
+      "name": "yaml-cpp",
+      "version>=": "0.9.0"
+    },
+    {
+      "name": "drogon",
+      "features": [
+        "ctl",
+        "postgres",
+        "yaml"
+      ]
     }
   ]
 }

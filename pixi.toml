@@ -1,0 +1,68 @@
+[workspace]
+name = "vip"
+version = "1.0.0"
+description = "VIP backend project using Drogon framework and C++26"
+authors = ["VIP Team"]
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "osx-64", "linux-64", "win-64"]
+
+[dependencies]
+cmake = ">=3.30"
+ninja = "*"
+pkg-config = "*"
+vcpkg = "*"
+clang = ">=21"
+clangxx = ">=21"
+llvm-tools = ">=21"
+
+[target.osx-arm64.dependencies]
+autoconf = "*"
+autoconf-archive = "*"
+automake = "*"
+libtool = "*"
+
+[target.osx-64.dependencies]
+autoconf = "*"
+autoconf-archive = "*"
+automake = "*"
+libtool = "*"
+
+[target.linux-64.dependencies]
+autoconf = "*"
+autoconf-archive = "*"
+automake = "*"
+libtool = "*"
+libstdcxx = ">=15"
+libstdcxx-devel_linux-64 = ">=15"
+
+[tasks]
+# Default local tasks use the debug preset; release tasks use the -release suffix.
+build = { cmd = "cmake --preset debug && cmake --build --preset debug", cwd = "." }
+build-debug = { cmd = "cmake --preset debug && cmake --build --preset debug", cwd = "." }
+build-release = { cmd = "cmake --preset release && cmake --build --preset release", cwd = "." }
+build-docker = { cmd = "cmake --preset docker-release && cmake --build --preset docker-release", cwd = "." }
+run-docker = { cmd = "docker compose up --build", cwd = "." }
+
+# Clean build
+clean = { cmd = "cmake -E rm -rf cmake-build-release cmake-build-debug", cwd = "." }
+
+# Configure only
+configure = { cmd = "cmake --preset debug --fresh", cwd = "." }
+configure-debug = { cmd = "cmake --preset debug --fresh", cwd = "." }
+configure-release = { cmd = "cmake --preset release --fresh", cwd = "." }
+
+# Run the application
+run = { cmd = "cmake --build --preset debug --target run-vip", cwd = ".", depends-on = ["build"] }
+run-debug = { cmd = "cmake --build --preset debug --target run-vip", cwd = ".", depends-on = ["build-debug"] }
+run-release = { cmd = "cmake --build --preset release --target run-vip", cwd = ".", depends-on = ["build-release"] }
+
+# Format code (using clang-format if available)
+fmt = "find . -name '*.cc' -o -name '*.h' | xargs clang-format -i"
+
+# Development setup
+dev-setup = { cmd = "cmake --preset debug --fresh", cwd = "." }
+
+[activation.env]
+CC = "clang"
+CXX = "clang++"
+CMAKE_PRESET = "debug"

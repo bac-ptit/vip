@@ -139,6 +139,8 @@ CMakeUserPresets.json
 # CMake
 cmake-build-*/
 build/
+/.vcpkg/
+/vcpkg_installed/
 # Mongo Explorer plugin
 .idea/**/mongoSettings.xml
 

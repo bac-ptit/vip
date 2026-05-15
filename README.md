@@ -1,65 +1,153 @@
-# VIP Project Backend: High-Performance Real Estate Platform
+# VIP Backend
 
-[![C++ Standard](https://img.shields.io/badge/C%2B%2B-26-blue.svg)](https://en.cppreference.com/w/cpp/compiler_support)
-[![Framework](https://img.shields.io/badge/Framework-Drogon-red.svg)](https://drogon.org)
-[![Serialization](https://img.shields.io/badge/Serialization-Glaze-green.svg)](https://github.com/stephenberry/glaze)
+High-performance C++ backend for the VIP real estate platform, built with Drogon, Glaze, PostgreSQL, and libsodium.
 
-## 🚀 Overview
+## Overview
 
-The **VIP Backend** is a cutting-edge, high-concurrency system designed for premium real estate management. Built with **C++26**, it leverages modern paradigms such as **Coroutines** to deliver exceptional throughput and minimal latency.
+VIP Backend is a layered C++ web service focused on fast request handling, async database access, and predictable domain boundaries. The codebase follows a Controller -> Service -> Repository -> Domain -> DTO structure and uses Drogon coroutines for non-blocking workflows.
 
-> **Note on Architecture**: While the project was initially intended to use **C++20 Modules**, the implementation has been transitioned back to **Traditional Headers**. This decision was made to optimize memory consumption during the build process, as C++ Module compilation proved to be excessively memory-intensive for the current infrastructure.
+The project uses **Pixi as the main development package manager**. Pixi provides the compiler/tooling environment, while CMake and vcpkg resolve and build the C++ dependencies declared in `vcpkg.json`.
 
-## ✨ Core Technical Highlights
+## Tech Stack
 
-*   **Modern C++26 Stack**: Fully utilizes **Coroutines** for non-blocking I/O and modern language features for performance and safety.
-*   **Extreme Cache Performance**: Implements a high-performance in-memory cache strategy. Responses for critical entities (like `Products`) are stored as **pre-serialized JSON strings** using [Glaze](https://github.com/stephenberry/glaze), bypassing redundant serialization cycles during request handling.
-*   **Reactive Image Handling**: Integrated `ImgBBPlugin` using `drogon::HttpClient` for seamless, non-blocking image uploads.
-*   **Layered Architecture**: Strictly follows the **Controller → Service → Repository → Domain → DTO** pattern, ensuring clean separation of concerns and robust maintainability.
-*   **High-Speed Serialization**: Powered by [Glaze](https://github.com/stephenberry/glaze), the fastest JSON library for modern C++, providing automatic reflection-based serialization.
+| Tool or library | Purpose |
+| --- | --- |
+| Pixi | Development environment and task runner |
+| CMake Presets | Reproducible configure/build profiles |
+| Ninja | Fast build backend |
+| vcpkg | C++ dependency resolution through manifest mode |
+| Clang >= 21 | Primary C++ compiler |
+| Drogon | HTTP framework and ORM |
+| Glaze | High-performance JSON serialization |
+| yaml-cpp | YAML configuration support |
+| libsodium | Password hashing and security primitives |
+| PostgreSQL | Primary relational database |
+| Docker Compose | Containerized database and backend runtime |
 
-## 🛠 Tech Stack & Dependencies
+## Requirements
 
-| Library | Purpose | Link |
-| :--- | :--- | :--- |
-| **Drogon** | Core Web Framework (C++20/26) | [GitHub](https://github.com/drogonframework/drogon) |
-| **Glaze** | High-performance JSON Serialization | [GitHub](https://github.com/stephenberry/glaze) |
-| **libsodium** | Cryptographic Hashing & Security | [Link](https://libsodium.org) |
-| **PostgreSQL** | Primary Relational Database | [Link](https://www.postgresql.org) |
-| **vcpkg** | C++ Dependency Management | [Link](https://vcpkg.io) |
+- Pixi
+- Docker and Docker Compose
+- Clang >= 21, provided by Pixi for local builds
+- On Linux with Clang + libstdc++, libstdc++ >= 15
 
-## 📦 Deployment & Environment
+Install Pixi from the official installer if it is not already available:
 
-The system is fully containerized using **Fedora 43** as the base image for both build and runtime stages, ensuring a modern GLIBC and compiler environment.
-
-### Prerequisites
-*   **Docker & Docker Compose**
-*   **ImgBB API Key** (Configured in `config.yaml`)
-
-### Quick Start
 ```bash
-# Clone the repository
-git clone https://github.com/bac-ptit/vip.git
-cd vip-backend
-
-# Build and start the infrastructure (Backend + Postgres)
-docker-compose up --build -d
+curl -fsSL https://pixi.sh/install.sh | sh
 ```
 
-### Build Optimization
-The project utilizes **CMake Presets**, **Ninja** build system, and a custom **vcpkg triplet** (`x64-linux-release`) to enforce release-only builds, drastically reducing image size and build times.
+## Quick Start With Pixi
 
-## 📖 API Documentation
+Install the Pixi environment:
 
-Comprehensive API specifications are available via OpenAPI 3.0. Once the server is running, access the documentation at:
-`http://localhost:5556/docs/index.html`
+```bash
+pixi install
+```
 
-## 🏗 Coding Standards
+Start PostgreSQL with Docker Compose:
 
-*   **Google C++ Style Guide**: Adheres to naming conventions (`snake_case`) and formatting rules.
-*   **Modern Initialization**: Extensive use of **Brace Initialization** (`{}`) consistently across the codebase for safer and predictable object creation.
-*   **Safety First**: Extensive use of C++ attributes (`[[nodiscard]]`, `[[maybe_unused]]`) for robust code.
-*   **Async Everything**: All service and repository layers are designed with `drogon::Task<T>` to maximize CPU utilization.
+```bash
+docker compose up -d db
+```
 
----
-*Maintained with excellence by the VIP Engineering Team.*
+Build and run the debug binary:
+
+```bash
+pixi run run
+```
+
+The backend listens on:
+
+```text
+http://localhost:5555
+```
+
+API documentation is served from:
+
+```text
+http://localhost:5555/docs/index.html
+```
+
+## Pixi Tasks
+
+| Command | Description |
+| --- | --- |
+| `pixi run build` | Configure and build the default debug preset |
+| `pixi run run` | Build and run the debug binary |
+| `pixi run build-debug` | Explicit debug build |
+| `pixi run run-debug` | Explicit debug run |
+| `pixi run build-release` | Configure and build the local release preset |
+| `pixi run run-release` | Build and run the local release binary |
+| `pixi run configure` | Fresh configure for the debug preset |
+| `pixi run configure-release` | Fresh configure for the release preset |
+| `pixi run clean` | Remove local debug and release build directories |
+| `pixi run fmt` | Format C++ sources with clang-format |
+| `pixi run run-docker` | Build and run the full Docker Compose stack |
+
+Local debug artifacts are written to `cmake-build-debug/`.
+Local release artifacts are written to `cmake-build-release/`.
+
+## Docker Usage
+
+Run the full stack with Pixi:
+
+```bash
+pixi run run-docker
+```
+
+This runs:
+
+```bash
+docker compose up --build
+```
+
+The Compose stack starts:
+
+- `vip-postgres` on port `5432`
+- `vip-backend` on port `5555`
+
+Stop the stack with:
+
+```bash
+docker compose down
+```
+
+The Dockerfile uses a multi-stage build. Pixi is used only in the builder stage to install the build environment and run the CMake/vcpkg build. The final runtime image contains only the runtime dependencies, configuration, static files, and compiled `vip` binary.
+
+## Configuration
+
+The application loads configuration from:
+
+```text
+config.yaml
+```
+
+For local Pixi runs, the default database host is `127.0.0.1`, which works with:
+
+```bash
+docker compose up -d db
+```
+
+During Docker image build, the Dockerfile rewrites the database host to `db` so the app container can reach the Compose PostgreSQL service.
+
+## Dependency Management
+
+C++ dependencies are declared in `vcpkg.json`, including:
+
+- Drogon with `ctl`, `postgres`, and `yaml` features
+- Glaze
+- libsodium
+- yaml-cpp
+
+CMake uses vcpkg manifest mode through the configured presets. You usually do not need to call vcpkg directly; use Pixi tasks instead.
+
+## Architecture Notes
+
+- Controllers handle HTTP routing and request/response boundaries.
+- Services own business workflows.
+- Repositories own database access.
+- Domains and DTOs define API and business data shapes.
+- Generated model files live under `models/`.
+
+The project currently builds with the configured CMake standard in `CMakeLists.txt` and requires Clang >= 21 for the primary local toolchain.
