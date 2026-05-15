@@ -73,6 +73,7 @@ http://localhost:5555/docs/index.html
 
 | Command | Description |
 | --- | --- |
+| `pixi run ensure-vcpkg` | Prepare the local `.vcpkg` checkout used by CMake presets |
 | `pixi run build` | Configure and build the default debug preset |
 | `pixi run run` | Build and run the debug binary |
 | `pixi run build-debug` | Explicit debug build |

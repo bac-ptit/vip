@@ -11,6 +11,7 @@ cmake = ">=3.30"
 ninja = "*"
 pkg-config = "*"
 vcpkg = "*"
+git = "*"
 clang = ">=21"
 clangxx = ">=21"
 llvm-tools = ">=21"
@@ -37,9 +38,10 @@ libstdcxx-devel_linux-64 = ">=15"
 
 [tasks]
 # Default local tasks use the debug preset; release tasks use the -release suffix.
-build = { cmd = "cmake --preset debug && cmake --build --preset debug", cwd = "." }
-build-debug = { cmd = "cmake --preset debug && cmake --build --preset debug", cwd = "." }
-build-release = { cmd = "cmake --preset release && cmake --build --preset release", cwd = "." }
+ensure-vcpkg = { cmd = "cmake -P cmake/EnsureVcpkg.cmake", cwd = "." }
+build = { cmd = "cmake --preset debug && cmake --build --preset debug", cwd = ".", depends-on = ["ensure-vcpkg"] }
+build-debug = { cmd = "cmake --preset debug && cmake --build --preset debug", cwd = ".", depends-on = ["ensure-vcpkg"] }
+build-release = { cmd = "cmake --preset release && cmake --build --preset release", cwd = ".", depends-on = ["ensure-vcpkg"] }
 build-docker = { cmd = "cmake --preset docker-release && cmake --build --preset docker-release", cwd = "." }
 run-docker = { cmd = "docker compose up --build", cwd = "." }
 
@@ -47,9 +49,9 @@ run-docker = { cmd = "docker compose up --build", cwd = "." }
 clean = { cmd = "cmake -E rm -rf cmake-build-release cmake-build-debug", cwd = "." }
 
 # Configure only
-configure = { cmd = "cmake --preset debug --fresh", cwd = "." }
-configure-debug = { cmd = "cmake --preset debug --fresh", cwd = "." }
-configure-release = { cmd = "cmake --preset release --fresh", cwd = "." }
+configure = { cmd = "cmake --preset debug --fresh", cwd = ".", depends-on = ["ensure-vcpkg"] }
+configure-debug = { cmd = "cmake --preset debug --fresh", cwd = ".", depends-on = ["ensure-vcpkg"] }
+configure-release = { cmd = "cmake --preset release --fresh", cwd = ".", depends-on = ["ensure-vcpkg"] }
 
 # Run the application
 run = { cmd = "cmake --build --preset debug --target run-vip", cwd = ".", depends-on = ["build"] }
@@ -60,7 +62,7 @@ run-release = { cmd = "cmake --build --preset release --target run-vip", cwd = "
 fmt = "find . -name '*.cc' -o -name '*.h' | xargs clang-format -i"
 
 # Development setup
-dev-setup = { cmd = "cmake --preset debug --fresh", cwd = "." }
+dev-setup = { cmd = "cmake --preset debug --fresh", cwd = ".", depends-on = ["ensure-vcpkg"] }
 
 [activation.env]
 CC = "clang"
