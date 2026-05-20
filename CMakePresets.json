@@ -12,7 +12,8 @@
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_TOOLCHAIN_FILE": "/opt/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/vcpkg-custom-triplets",
-        "VCPKG_TARGET_TRIPLET": "x64-linux-release"
+        "VCPKG_TARGET_TRIPLET": "x64-linux-release",
+        "VCPKG_INSTALL_OPTIONS": "--allow-unsupported"
       }
     },
     {
