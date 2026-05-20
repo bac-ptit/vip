@@ -19,6 +19,8 @@ RUN --mount=type=cache,target=/var/cache/dnf \
     wget \
     zip \
     unzip \
+    bison \
+    flex \
     tar \
     pkg-config \
     autoconf \
