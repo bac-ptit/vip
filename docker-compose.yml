@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16-alpine
+    image: docker.io/library/postgres:16-alpine
     container_name: vip-postgres
     environment:
       POSTGRES_USER: bac
@@ -20,6 +20,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: docker.io/hoangbac2004/vip-backend:latest
     container_name: vip-backend
     ports:
       - "5555:5555"
